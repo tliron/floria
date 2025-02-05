@@ -1,0 +1,126 @@
+package floria:plugins;
+
+interface floria {
+    variant expression {
+        null,
+        integer(s64),
+        unsigned-integer(u64),
+        float(f64),
+        boolean(bool),
+        text(string),
+        blob(list<u8>),
+        %list(list-resource),
+        map(map-resource),
+        custom(custom-resource),
+        call(call-resource),
+    }
+
+    resource list-resource {
+        constructor(items: list<expression>);
+        get: func() -> list<expression>;
+        length: func() -> u64;
+    }
+
+    resource map-resource {
+        constructor(kv-pairs: list<tuple<expression, expression>>);
+        get: func() -> list<tuple<expression, expression>>;
+        length: func() -> u64;
+    }
+
+    resource custom-resource {
+        constructor(kind: string, expression: expression);
+        get: func() -> tuple<string, expression>;
+    }
+
+    resource call-resource {
+        constructor(plugin: string, function: string, arguments: list<expression>);
+        get: func() -> tuple<string, string, list<expression>>;
+    }
+
+    variant kind {
+        class,
+        vertex-template,
+        edge-template,
+        vertex,
+        edge,
+    }
+
+    record id {
+        kind: kind,
+        directory: list<string>,
+        id: string,
+    }
+
+    record call-site {
+        id: id,
+        path: list<string>,
+    }
+
+    log: func(source: string, message: string);
+    evaluate-expression: func(expression: expression, call-site: call-site) -> result<option<expression>, string>;
+    get-entity: func(id: id) -> result<expression, string>;
+}
+
+interface dispatch {
+    variant expression {
+        null,
+        integer(s64),
+        unsigned-integer(u64),
+        float(f64),
+        boolean(bool),
+        text(string),
+        blob(list<u8>),
+        %list(list-resource),
+        map(map-resource),
+        custom(custom-resource),
+        call(call-resource),
+    }
+
+    resource list-resource {
+        constructor(items: list<expression>);
+        get: func() -> list<expression>;
+        length: func() -> u64;
+    }
+
+    resource map-resource {
+        constructor(kv-pairs: list<tuple<expression, expression>>);
+        get: func() -> list<tuple<expression, expression>>;
+        length: func() -> u64;
+    }
+
+    resource custom-resource {
+        constructor(kind: string, expression: expression);
+        get: func() -> tuple<string, expression>;
+    }
+
+    resource call-resource {
+        constructor(plugin: string, function: string, arguments: list<expression>);
+        get: func() -> tuple<string, string, list<expression>>;
+    }
+
+    variant kind {
+        class,
+        vertex-template,
+        edge-template,
+        vertex,
+        edge,
+    }
+
+    record id {
+        kind: kind,
+        directory: list<string>,
+        id: string,
+    }
+
+    record call-site {
+        id: id,
+        path: list<string>,
+    }
+
+    dispatch: func(name: string, arguments: list<expression>, call-site: call-site) -> result<option<expression>, string>;
+}
+
+world dispatch-plugin {
+    import floria;
+    export dispatch;
+}
