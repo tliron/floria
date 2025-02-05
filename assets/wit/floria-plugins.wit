@@ -1,0 +1,185 @@
+package floria:plugins;
+
+world dispatch-plugin {
+    import floria;
+    export dispatch;
+}
+
+interface floria {
+    log: func(source: string, message: string);
+    evaluate-expression: func(expression: expression, call-site: call-site) -> result<option<expression>, string>;
+    get-entity: func(id: id) -> result<entity, string>;
+
+    record call-site {
+        id: id,
+        property: option<string>,
+    }
+
+    // Entities
+
+    variant entity-kind {
+        class,
+        vertex-template,
+        edge-template,
+        vertex,
+        edge,
+    }
+
+    record id {
+        kind: entity-kind,
+        directory: list<string>,
+        name: string,
+    }
+
+    variant entity {
+        vertex(vertex),
+        edge(edge),
+    }
+
+    record vertex {
+        id: id,
+        origin-template-id: option<id>,
+        metadata: map-resource,
+        class-ids: list<id>,
+        properties: list<tuple<string, property>>,
+
+        containing-vertex-id: option<id>,
+        contained-vertex-ids: list<id>,
+        outgoing-edge-ids: list<id>,
+        incoming-edge-ids: list<id>,
+    }
+
+    record edge {
+        id: id,
+        origin-template-id: option<id>,
+        metadata: map-resource,
+        class-ids: list<id>,
+        properties: list<tuple<string, property>>,
+
+        source-vertex-id: id,
+        target-vertex-id: id,
+    }
+
+    record property {
+        metadata: map-resource,
+        class-ids: list<id>,
+        read-only: bool,
+        preparer: option<expression>,
+        updater: option<expression>,
+        value: option<expression>,
+    }
+
+    // Expressions
+
+    variant expression {
+        null,
+        integer(s64),
+        unsigned-integer(u64),
+        float(f64),
+        boolean(bool),
+        text(string),
+        blob(list<u8>),
+        %list(list-resource),
+        map(map-resource),
+        custom(custom-resource),
+        call(call-resource),
+    }
+
+    variant call-kind {
+        normal,
+        eager,
+        lazy,
+    }
+
+    resource list-resource {
+        constructor(items: list<expression>);
+        get: func() -> list<expression>;
+        length: func() -> u64;
+    }
+
+    resource map-resource {
+        constructor(kv-pairs: list<tuple<expression, expression>>);
+        get: func() -> list<tuple<expression, expression>>;
+        length: func() -> u64;
+    }
+
+    resource custom-resource {
+        constructor(kind: string, expression: expression);
+        get: func() -> tuple<string, expression>;
+    }
+
+    resource call-resource {
+        constructor(plugin: string, function: string, arguments: list<expression>, kind: call-kind);
+        get: func() -> tuple<string, string, list<expression>, call-kind>;
+    }
+}
+
+interface dispatch {
+    initialize: func() -> result<_, string>;
+    dispatch: func(name: string, arguments: list<expression>, call-site: call-site) -> result<option<expression>, string>;
+
+    record call-site {
+        id: id,
+        property: option<string>,
+    }
+
+    // Entities
+
+    variant entity-kind {
+        class,
+        vertex-template,
+        edge-template,
+        vertex,
+        edge,
+    }
+
+    record id {
+        kind: entity-kind,
+        directory: list<string>,
+        name: string,
+    }
+
+    // Expressions
+
+    variant expression {
+        null,
+        integer(s64),
+        unsigned-integer(u64),
+        float(f64),
+        boolean(bool),
+        text(string),
+        blob(list<u8>),
+        %list(list-resource),
+        map(map-resource),
+        custom(custom-resource),
+        call(call-resource),
+    }
+
+    variant call-kind {
+        normal,
+        eager,
+        lazy,
+    }
+
+    resource list-resource {
+        constructor(items: list<expression>);
+        get: func() -> list<expression>;
+        length: func() -> u64;
+    }
+
+    resource map-resource {
+        constructor(kv-pairs: list<tuple<expression, expression>>);
+        get: func() -> list<tuple<expression, expression>>;
+        length: func() -> u64;
+    }
+
+    resource custom-resource {
+        constructor(kind: string, expression: expression);
+        get: func() -> tuple<string, expression>;
+    }
+
+    resource call-resource {
+        constructor(plugin: string, function: string, arguments: list<expression>, kind: call-kind);
+        get: func() -> tuple<string, string, list<expression>, call-kind>;
+    }
+}
