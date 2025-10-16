@@ -104,7 +104,7 @@ impl Expression {
     /// Evaluate an expression.
     ///
     /// Lazy calls are not dispatched here. They must be dispatched manually, e.g. via
-    /// [evaluate_dispatch](Expression::evaluate_dispatch).
+    /// [dispatch_if_call](Expression::dispatch_if_call).
     pub fn evaluate(self, call_site: &CallSite) -> Result<Option<Expression>, String> {
         if let Expression::Call(call_resource) = &self
             && matches!(call_resource.call().kind, CallKind::Lazy)

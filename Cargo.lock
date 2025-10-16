@@ -315,7 +315,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "compris"
-version = "0.0.7"
+version = "0.0.10"
 dependencies = [
  "anstream",
  "base64",
@@ -415,7 +415,7 @@ dependencies = [
  "cranelift-entity",
  "cranelift-isle",
  "gimli",
- "hashbrown",
+ "hashbrown 0.15.5",
  "log",
  "pulley-interpreter",
  "regalloc2",
@@ -700,7 +700,7 @@ checksum = "52051878f80a721bb68ebfbc930e07b65ba72f2da88968ea5c06fd6ca3d3a127"
 
 [[package]]
 name = "floria"
-version = "0.0.1"
+version = "0.0.4"
 dependencies = [
  "compris",
  "duplicate",
@@ -714,7 +714,7 @@ dependencies = [
 
 [[package]]
 name = "floria-plugin-sdk"
-version = "0.0.1"
+version = "0.0.4"
 dependencies = [
  "duplicate",
  "num-traits",
@@ -903,12 +903,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashbrown"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5419bdc4f6a9207fbeba6d11b604d481addf78ecd10c11ad51e76c2f6482748d"
+
+[[package]]
 name = "hashlink"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7382cf6263419f2d8df38c55d7da83da5c18aef87fc7a7fc1fb1e344edfe14c1"
 dependencies = [
- "hashbrown",
+ "hashbrown 0.15.5",
 ]
 
 [[package]]
@@ -1073,7 +1079,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
- "hashbrown",
+ "hashbrown 0.16.0",
  "serde",
  "serde_core",
 ]
@@ -1153,7 +1159,7 @@ dependencies = [
 
 [[package]]
 name = "kutil"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anstream",
  "bimap",
@@ -1177,7 +1183,7 @@ dependencies = [
 
 [[package]]
 name = "kutil-cli-macros"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "deluxe",
  "proc-macro2",
@@ -1187,7 +1193,7 @@ dependencies = [
 
 [[package]]
 name = "kutil-std-macros"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "deluxe",
  "proc-macro2",
@@ -1401,7 +1407,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff76201f031d8863c38aa7f905eca4f53abbfa15f609db4277d44cd8938f33fe"
 dependencies = [
  "crc32fast",
- "hashbrown",
+ "hashbrown 0.15.5",
  "indexmap",
  "memchr",
 ]
@@ -1654,7 +1660,7 @@ checksum = "efd8138ce7c3d7c13be4f61893154b5d711bd798d2d7be3ecb8dcc7e7a06ca98"
 dependencies = [
  "allocator-api2",
  "bumpalo",
- "hashbrown",
+ "hashbrown 0.15.5",
  "log",
  "rustc-hash",
  "smallvec",
@@ -2391,7 +2397,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c9d90bb93e764f6beabf1d02028c70a2156a6583e63ac4218dd07ef733368b0"
 dependencies = [
  "bitflags",
- "hashbrown",
+ "hashbrown 0.15.5",
  "indexmap",
  "semver",
  "serde",
@@ -2424,7 +2430,7 @@ dependencies = [
  "encoding_rs",
  "fxprof-processed-profile",
  "gimli",
- "hashbrown",
+ "hashbrown 0.15.5",
  "indexmap",
  "ittapi",
  "libc",

@@ -57,7 +57,7 @@ pub trait Store {
 
 /// Utilities for [Store].
 pub trait StoreUtilities {
-    /// Get entity as [Variant].
+    /// Get entity as expression.
     fn get_entity_as_expression(&self, id: &ID) -> Result<Option<Expression>, StoreError>;
 }
 

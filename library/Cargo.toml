@@ -3,7 +3,7 @@ edition = "2024"
 
 name = "floria"
 description = "Floria data system for cloud orchestration"
-version = "0.0.1"
+version = "0.0.4"
 rust-version = "1.90"
 
 license = "MIT OR Apache-2.0"
@@ -23,9 +23,9 @@ keywords = [
 ]
 
 [dependencies]
-compris = { version = "=0.0.7", features = ["serde"] }
+compris = { version = "=0.0.10", features = ["serde"] }
 duplicate = "2.0.0"
-kutil = { version = "=0.0.1", features = ["cli", "std", "fast_collections", "immutable", "derive"] }
+kutil = { version = "=0.0.2", features = ["cli", "std", "fast_collections", "immutable", "derive"] }
 ordered-float = "5.1.0"
 thiserror = "2.0.17"
 tracing = "0.1.41"

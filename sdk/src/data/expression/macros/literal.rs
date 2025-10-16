@@ -1,4 +1,4 @@
-/// Creates a [Expression](crate::data::Expression) from a bare primitive expression.
+/// Creates an [Expression](crate::data::Expression) from a bare primitive expression.
 #[macro_export]
 macro_rules! normal (
     ( $value:expr $(,)? ) => ( $crate::data::Expression::from($value) );
