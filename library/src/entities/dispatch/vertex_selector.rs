@@ -6,16 +6,16 @@ use super::super::{
 use kutil::std::error::*;
 impl VertexSelector {
     /// Select.
-    pub fn select<StoreT, ErrorRecipientT>(
+    pub fn select<StoreT, ErrorReceiverT>(
         &self,
         source_vertex_id: &ID,
         edge_template_id: &ID,
         library: &mut Library<StoreT>,
-        errors: &mut ErrorRecipientT,
+        errors: &mut ErrorReceiverT,
     ) -> Result<Option<ID>, FloriaError>
     where
         StoreT: Clone + Send + Store,
-        ErrorRecipientT: ErrorRecipient<FloriaError>,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
         match self {
             Self::VertexID(id) => Ok(Some(id.clone())),

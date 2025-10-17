@@ -1,5 +1,8 @@
 *Work in progress, not ready for general use*
 
+[![crates.io](https://img.shields.io/crates/v/floria?color=%23227700)](https://crates.io/crates/floria)
+[![docs.rs](https://img.shields.io/badge/docs.rs-latest?color=grey)](https://docs.rs/floria/latest/floria/)
+
 Floria
 ======
 

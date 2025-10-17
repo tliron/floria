@@ -3,8 +3,8 @@ edition = "2024"
 
 name = "floria-plugin-sdk"
 description = "Floria plugin SDK"
-version = "0.0.4"
-rust-version = "1.90"
+version = "0.0.5"
+rust-version = "1.91"
 
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tliron/floria"
@@ -23,13 +23,13 @@ keywords = [
 ]
 
 [dependencies]
-duplicate = "2.0.0"
+duplicate = "2.0.1"
 num-traits = "0.2.19"
 ordered-float = "5.1.0"
-wit-bindgen = "0.46.0"
+wit-bindgen = "0.47.0"
 
 # https://stackoverflow.com/a/61417700
 [package.metadata.docs.rs]
 all-features = true
-default-target = "wasm32-wasip2"
+targets = ["wasm32-wasip2"]
 rustdoc-args = ["--cfg", "docsrs"]

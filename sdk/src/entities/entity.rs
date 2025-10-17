@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, floria_bindings, utils::*},
+    super::{data::*, utils::*, *},
     instance::*,
 };
 
@@ -21,7 +21,7 @@ impl floria_bindings::Entity {
     }
 
     /// Error if not of the kind.
-    pub fn assert_kind(&self, kind: EntityKind) -> Result<(), String> {
+    pub fn assert_kind(&self, kind: EntityKind) -> Result<(), DispatchError> {
         if self.kind() == kind {
             Ok(())
         } else {
@@ -45,7 +45,7 @@ impl From<floria_bindings::Edge> for floria_bindings::Entity {
 }
 
 impl TryInto<floria_bindings::Vertex> for floria_bindings::Entity {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_into(self) -> Result<floria_bindings::Vertex, Self::Error> {
         match self {
@@ -56,7 +56,7 @@ impl TryInto<floria_bindings::Vertex> for floria_bindings::Entity {
 }
 
 impl TryInto<floria_bindings::Edge> for floria_bindings::Entity {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_into(self) -> Result<floria_bindings::Edge, Self::Error> {
         match self {

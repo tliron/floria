@@ -1,7 +1,7 @@
 use super::{super::dispatch::*, initialization::*};
 
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{io, sync::*},
     thiserror::*,
     wasmtime::component::*,
@@ -19,20 +19,20 @@ pub enum PluginError {
     NotFound(String),
 
     /// Load Wasm.
-    #[error("load Wasm: {0}")]
+    #[error("load Wasm: {0:?}")]
     LoadWasm(wasmtime::Error),
 
     /// Link Wasm.
-    #[error("link Wasm: {0}")]
+    #[error("link Wasm: {0:?}")]
     LinkWasm(wasmtime::Error),
 
     /// Instantiate Wasm.
     #[cfg(feature = "plugins")]
-    #[error("instantiate Wasm: {0}")]
+    #[error("instantiate Wasm: {0:?}")]
     InstantiateWasm(wasmtime::Error),
 
     /// Call Wasm.
-    #[error("call Wasm: {0}")]
+    #[error("call Wasm: {0:?}")]
     CallWasm(wasmtime::Error),
 
     /// Wasm resource.

@@ -2,21 +2,28 @@ use super::{data::*, utils::*};
 
 use std::sync::*;
 
-type Static<T> = LazyLock<Mutex<Option<T>>>;
+/// Dispatch error.
+///
+/// Can contain depiction markup.
+pub type DispatchError = String;
 
-type Dispatcher =
-    fn(name: String, arguments: Vec<Expression>, call_site: CallSite) -> Result<Option<Expression>, String>;
+/// Dispatch result.
+pub type DispatchResult = Result<Option<Expression>, DispatchError>;
+
+type Static<StaticT> = LazyLock<Mutex<Option<StaticT>>>;
+
+type Dispatcher = fn(name: String, arguments: Vec<Expression>, call_site: CallSite) -> DispatchResult;
 
 static DISPATCHER_PLUGIN: Static<(String, Dispatcher)> = Static::new(|| Default::default());
 
 /// Register dispatcher plugin.
-pub fn register_dispatcher_plugin(name: String, dispatcher: Dispatcher) -> Result<(), String> {
+pub fn register_dispatcher_plugin(name: String, dispatcher: Dispatcher) -> Result<(), DispatchError> {
     *DISPATCHER_PLUGIN.lock().map_escape_depiction_error()? = Some((name, dispatcher));
     Ok(())
 }
 
 /// Get registered dispatcher plugin.
-pub fn registered_dispatcher_plugin() -> Result<(String, Dispatcher), String> {
+pub fn registered_dispatcher_plugin() -> Result<(String, Dispatcher), DispatchError> {
     match DISPATCHER_PLUGIN.lock().map_escape_depiction_error()?.clone() {
         Some(plugin) => Ok(plugin),
         None => Err("plugin not registered".into()),
@@ -25,7 +32,7 @@ pub fn registered_dispatcher_plugin() -> Result<(String, Dispatcher), String> {
 
 /// Implement dispatcher plugin.
 #[macro_export]
-macro_rules! impl_dispatcher (
+macro_rules! impl_dispatcher {
     ( $plugin_name:expr, $arguments:ident, $call_site:ident, { $( $match:tt )* } ) => {
         /// Dispatcher.
         pub struct Dispatcher;
@@ -38,7 +45,7 @@ macro_rules! impl_dispatcher (
             type CustomResource = $crate::data::Custom;
             type CallResource = $crate::data::Call;
 
-            fn initialize() -> ::std::result::Result<(), ::std::string::String> {
+            fn initialize() -> ::std::result::Result<(), $crate::DispatchError> {
                 $crate::register_dispatcher_plugin($plugin_name.into(), Self::dispatch)
             }
 
@@ -46,7 +53,7 @@ macro_rules! impl_dispatcher (
                 name: ::std::string::String,
                 $arguments: ::std::vec::Vec<$crate::data::Expression>,
                 $call_site: $crate::data::CallSite
-            ) -> ::std::result::Result<::std::option::Option<$crate::data::Expression>, ::std::string::String> {
+            ) -> $crate::DispatchResult {
                 match name.as_str() {
                     $( $match )*
                     _ => ::std::result::Result::Err("unsupported function".into()),
@@ -54,7 +61,7 @@ macro_rules! impl_dispatcher (
             }
         }
     }
-);
+}
 
 #[allow(unused_imports)]
 pub use impl_dispatcher;

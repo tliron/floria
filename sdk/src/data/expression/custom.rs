@@ -1,8 +1,13 @@
-use super::super::super::{dispatch_bindings::*, utils::*};
+use super::super::super::{dispatch_bindings::*, utils::*, *};
 
 use std::{cmp::*, fmt, hash::*};
 
 impl CustomResource {
+    /// Into custom.
+    pub fn into_custom(self) -> Custom {
+        self.into_inner()
+    }
+
     /// Get custom.
     pub fn custom(&self) -> &Custom {
         self.get()
@@ -35,7 +40,7 @@ impl Custom {
     }
 
     /// Assert kind.
-    pub fn assert_kind(&self, kind: &str, type_name: &str) -> Result<(), String> {
+    pub fn assert_kind(&self, kind: &str, type_name: &str) -> Result<(), DispatchError> {
         if self.kind == kind {
             Ok(())
         } else {
@@ -54,7 +59,7 @@ impl GuestCustomResource for Custom {
         Self { kind, inner }
     }
 
-    fn get(&self) -> (String, Expression) {
+    fn inner(&self) -> (String, Expression) {
         (self.kind.clone(), self.inner.clone())
     }
 }

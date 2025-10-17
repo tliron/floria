@@ -1,12 +1,14 @@
 /// Creates an [Expression](crate::data::Expression) from a bare primitive expression.
 #[macro_export]
-macro_rules! normal (
-    ( $value:expr $(,)? ) => ( $crate::data::Expression::from($value) );
-);
+macro_rules! expression {
+    ( $value:expr $(,)? ) => {
+        $crate::data::Expression::from($value)
+    };
+}
 
 /// Creates a [Expression::List](crate::data::Expression::List) from a sequence of bare primitive expressions.
 #[macro_export]
-macro_rules! normal_list (
+macro_rules! expression_list {
     () => (
         $crate::data::Expression::List(
             $crate::data::ListResource::new(
@@ -19,16 +21,16 @@ macro_rules! normal_list (
         $crate::data::Expression::List(
             $crate::data::ListResource::new(
                 $crate::data::List::from(
-                    [ $( $crate::normal!( $value ) ),+ ]
+                    [ $( $crate::expression!( $value ) ),+ ]
                 )
             )
         )
     );
-);
+}
 
 /// Creates a [Expression::Map](crate::data::Expression::Map) from a sequence of key-value tuples.
 #[macro_export]
-macro_rules! normal_map (
+macro_rules! expression_map {
     () => (
         $crate::data::Expression::Map(
             $crate::data::MapResource::new(
@@ -42,21 +44,21 @@ macro_rules! normal_map (
             $crate::data::MapResource::new(
                 $crate::data::Map::from(
                     ::std::collections::BTreeMap::from(
-                        [ $( ( $crate::normal!( $key ), $crate::normal!( $value ) ) ),+ ]
+                        [ $( ( $crate::expression!( $key ), $crate::expression!( $value ) ) ),+ ]
                     )
                 )
             )
         )
     );
-);
+}
 
 /// Creates a [Vec]<[Expression](crate::data::Expression)> from a sequence of bare primitive expressions.
 #[macro_export]
-macro_rules! normal_vec (
+macro_rules! expression_vec {
     ( $( $value:expr ),* $(,)? ) => (
-        vec![ $( $crate::normal!( $value ) ),* ]
+        vec![ $( $crate::expression!( $value ) ),* ]
     );
-);
+}
 
 #[allow(unused_imports)]
-pub use {normal, normal_list, normal_map, normal_vec};
+pub use {expression, expression_list, expression_map, expression_vec};

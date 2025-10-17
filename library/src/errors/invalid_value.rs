@@ -1,7 +1,8 @@
 use super::super::data::*;
 
 use {
-    kutil::{cli::depict::*, std::iter::*},
+    depiction::*,
+    kutil::std::iter::*,
     std::{fmt, io},
     thiserror::*,
 };

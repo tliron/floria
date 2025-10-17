@@ -43,7 +43,7 @@ pub trait Metadata {
                 && key == map_key
             {
                 if let floria_bindings::Expression::Map(map_resource) = value {
-                    for (key, value) in map_resource.get() {
+                    for (key, value) in map_resource.inner() {
                         if let floria_bindings::Expression::Text(key_) = key
                             && key_ == string_key
                         {

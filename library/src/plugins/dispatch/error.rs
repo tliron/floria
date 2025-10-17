@@ -1,7 +1,7 @@
 use super::super::{super::data::*, bindings::exports::floria::plugins::dispatch};
 
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{error::*, fmt, io},
 };
 

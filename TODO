@@ -64,6 +64,8 @@ https://github.com/surrealdb/surrealdb
 Rust
 source-available, but not open source
 
+https://github.com/helixdb/helix-db
+
 https://age.apache.org/
 On top of postgres
 https://github.com/Dzordzu/rust-apache-age

@@ -12,7 +12,7 @@ impl floria_bindings::Property {
 
 impl Metadata for floria_bindings::Property {
     fn metadata(&self) -> Vec<(floria_bindings::Expression, floria_bindings::Expression)> {
-        self.metadata.get()
+        self.metadata.inner()
     }
 
     fn class_ids(&self) -> &Vec<floria_bindings::Id> {

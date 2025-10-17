@@ -7,7 +7,8 @@ use super::{
 };
 
 use {
-    kutil::{cli::depict::*, std::immutable::*},
+    depiction::*,
+    kutil::std::immutable::*,
     std::{collections::*, io},
 };
 
@@ -97,11 +98,11 @@ impl EdgeTemplate {
         self.template.into_expression(&mut map, embedded, store)?;
 
         map.insert(
-            "containing_source_vertex_template_id".into(),
+            "containing-source-vertex-template-id".into(),
             self.containing_source_vertex_template_id.to_string().into(),
         );
 
-        map.insert("target_selector".into(), self.target_selector.into());
+        map.insert("target-selector".into(), self.target_selector.into());
 
         Ok(map.into())
     }

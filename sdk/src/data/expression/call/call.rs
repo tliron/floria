@@ -1,15 +1,20 @@
-use super::super::super::super::{dispatch_bindings::*, utils::*, *};
+use super::super::super::super::{dispatch_bindings::*, host, *};
 
 use std::{cmp::*, fmt, hash::*};
 
 impl CallResource {
-    /// To call.
+    /// Into call.
+    pub fn into_call(self) -> Call {
+        self.into_inner()
+    }
+
+    /// Get call.
     pub fn call(&self) -> &Call {
         self.get()
     }
 
-    /// To call.
-    pub fn to_call_mut(&mut self) -> &mut Call {
+    /// Get call.
+    pub fn call_mut(&mut self) -> &mut Call {
         self.get_mut()
     }
 }
@@ -36,13 +41,12 @@ pub struct Call {
 
 impl Call {
     /// Dispatch.
-    pub fn dispatch(&self, call_site: &CallSite) -> Result<Option<Expression>, String> {
+    pub fn dispatch(&self, call_site: &CallSite) -> DispatchResult {
         let (name, dispatcher) = registered_dispatcher_plugin()?;
         if self.plugin == name {
             dispatcher(self.function.clone(), self.arguments.clone(), call_site.clone())
         } else {
-            // TODO
-            Err(format!("other plugin: |error|{}|", escape_depiction_markup(&self.plugin)))
+            host::evaluate_expression(self.clone().into(), call_site.clone())
         }
     }
 }
@@ -52,7 +56,7 @@ impl GuestCallResource for Call {
         Self { plugin, function, arguments, kind }
     }
 
-    fn get(&self) -> (String, String, Vec<Expression>, CallKind) {
+    fn inner(&self) -> (String, String, Vec<Expression>, CallKind) {
         (self.plugin.clone(), self.function.clone(), self.arguments.clone(), self.kind)
     }
 }

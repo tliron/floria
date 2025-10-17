@@ -3,8 +3,8 @@ edition = "2024"
 
 name = "floria"
 description = "Floria data system for cloud orchestration"
-version = "0.0.4"
-rust-version = "1.90"
+version = "0.0.5"
+rust-version = "1.91"
 
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tliron/floria"
@@ -23,23 +23,25 @@ keywords = [
 ]
 
 [dependencies]
-compris = { version = "=0.0.10", features = ["serde"] }
-duplicate = "2.0.0"
-kutil = { version = "=0.0.2", features = ["cli", "std", "fast_collections", "immutable", "derive"] }
+anyhow = "1.0.100"
+compris = { version = "=0.0.11", features = ["serde"] }
+depiction = "=0.0.1"
+duplicate = "2.0.1"
+kutil = { version = "=0.0.5", features = ["std", "fast_collections", "immutable"] }
 ordered-float = "5.1.0"
 thiserror = "2.0.17"
 tracing = "0.1.41"
 # https://docs.rs/wasmtime/latest/wasmtime/index.html#crate-features
-wasmtime = { optional = true, version = "37.0.2", default-features = false, features = [
+wasmtime = { optional = true, version = "38.0.3", default-features = false, features = [
     "cranelift",
     "parallel-compilation",
     "pooling-allocator",
 ] }
-wasmtime-wasi = { optional = true, version = "37.0.2", default-features = false, features = ["p2"] }
+wasmtime-wasi = { optional = true, version = "38.0.3", default-features = false, features = ["p2"] }
 
 [features]
 plugins = ["dep:wasmtime", "dep:wasmtime-wasi"]
-wasm_debug = [
+wasm-debug = [
     "wasmtime/demangle",
     "wasmtime/profiling",
     "wasmtime/coredump",

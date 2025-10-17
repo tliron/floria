@@ -57,7 +57,7 @@ impl Template {
         map.insert("id".into(), self.id.to_string().into());
         map.insert("metadata".into(), metadata_into_expression(self.metadata));
         classes_into_expression(store, map, embedded, self.class_ids)?;
-        properties_into_expression(store, map, "property_templates", embedded, self.property_templates)?;
+        properties_into_expression(store, map, "property-templates", embedded, self.property_templates)?;
 
         Ok(())
     }

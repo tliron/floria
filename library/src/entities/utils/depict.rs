@@ -4,10 +4,8 @@ use super::super::{
 };
 
 use {
-    kutil::{
-        cli::depict::*,
-        std::{immutable::*, iter::*},
-    },
+    depiction::*,
+    kutil::std::{immutable::*, iter::*},
     std::{collections::*, io},
 };
 

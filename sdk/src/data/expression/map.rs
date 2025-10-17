@@ -8,6 +8,11 @@ use std::{
 };
 
 impl MapResource {
+    /// Into map.
+    pub fn into_map(self) -> Map {
+        self.into_inner()
+    }
+
     /// Get map.
     pub fn map(&self) -> &Map {
         self.get()
@@ -51,7 +56,7 @@ impl GuestMapResource for Map {
         Self::from_iter(key_value_pairs)
     }
 
-    fn get(&self) -> Vec<(Expression, Expression)> {
+    fn inner(&self) -> Vec<(Expression, Expression)> {
         self.inner.clone().into_iter().collect()
     }
 

@@ -1,7 +1,8 @@
 use super::{directory::*, kind::*};
 
 use {
-    kutil::{cli::depict::*, std::immutable::*},
+    depiction::*,
+    kutil::std::immutable::*,
     std::{fmt, io},
 };
 

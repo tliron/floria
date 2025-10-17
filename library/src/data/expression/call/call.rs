@@ -2,10 +2,8 @@ use super::{super::expression::*, kind::*};
 
 use {
     compris::normal::*,
-    kutil::{
-        cli::depict::*,
-        std::{immutable::*, iter::*},
-    },
+    depiction::*,
+    kutil::std::{immutable::*, iter::*},
     std::{fmt, io},
 };
 

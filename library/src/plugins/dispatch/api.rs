@@ -8,6 +8,8 @@ use super::{
     plugin::*,
 };
 
+use anyhow::Context;
+
 impl<StoreT> DispatchPlugin<StoreT>
 where
     StoreT: Store,
@@ -17,6 +19,7 @@ where
         self.bindings
             .floria_plugins_dispatch()
             .call_initialize(&mut self.host)
+            .context("initializing dispatch plugin")
             .map_err(PluginError::CallWasm)?
             .map_err(|error| InitializationError::new(error.to_string()).into())
     }
@@ -38,15 +41,16 @@ where
 
         tracing::debug!("dispatch: {} at {}", call, call_site);
 
-        let value = self
+        let expression = self
             .bindings
             .floria_plugins_dispatch()
             .call_dispatch(&mut self.host, name, &dispatch_arguments, call_site)
+            .context("calling dispatch")
             .map_err(PluginError::CallWasm)?
             .map_err(|error| DispatchError::new(error.to_string(), call, call_site.clone()))?;
 
-        Ok(match value {
-            Some(value) => Some(self.expression_from_bindings(value)?),
+        Ok(match expression {
+            Some(expression) => Some(self.expression_from_bindings(expression)?),
             None => None,
         })
     }

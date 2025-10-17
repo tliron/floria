@@ -93,24 +93,24 @@ interface floria {
 
     resource list-resource {
         constructor(items: list<expression>);
-        get: func() -> list<expression>;
+        inner: func() -> list<expression>;
         length: func() -> u64;
     }
 
     resource map-resource {
-        constructor(kv-pairs: list<tuple<expression, expression>>);
-        get: func() -> list<tuple<expression, expression>>;
+        constructor(key-value-pairs: list<tuple<expression, expression>>);
+        inner: func() -> list<tuple<expression, expression>>;
         length: func() -> u64;
     }
 
     resource custom-resource {
         constructor(kind: string, expression: expression);
-        get: func() -> tuple<string, expression>;
+        inner: func() -> tuple<string, expression>;
     }
 
     resource call-resource {
         constructor(plugin: string, function: string, arguments: list<expression>, kind: call-kind);
-        get: func() -> tuple<string, string, list<expression>, call-kind>;
+        inner: func() -> tuple<string, string, list<expression>, call-kind>;
     }
 }
 
@@ -163,23 +163,23 @@ interface dispatch {
 
     resource list-resource {
         constructor(items: list<expression>);
-        get: func() -> list<expression>;
+        inner: func() -> list<expression>;
         length: func() -> u64;
     }
 
     resource map-resource {
-        constructor(kv-pairs: list<tuple<expression, expression>>);
-        get: func() -> list<tuple<expression, expression>>;
+        constructor(key-value-pairs: list<tuple<expression, expression>>);
+        inner: func() -> list<tuple<expression, expression>>;
         length: func() -> u64;
     }
 
     resource custom-resource {
         constructor(kind: string, expression: expression);
-        get: func() -> tuple<string, expression>;
+        inner: func() -> tuple<string, expression>;
     }
 
     resource call-resource {
         constructor(plugin: string, function: string, arguments: list<expression>, kind: call-kind);
-        get: func() -> tuple<string, string, list<expression>, call-kind>;
+        inner: func() -> tuple<string, string, list<expression>, call-kind>;
     }
 }

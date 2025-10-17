@@ -1,5 +1,5 @@
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{io, sync::*},
     thiserror::*,
 };

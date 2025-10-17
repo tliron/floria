@@ -1,4 +1,4 @@
-use super::super::{dispatch_bindings::*, entities::*, floria_bindings, host};
+use super::super::{dispatch_bindings::*, entities::*, *};
 
 use std::fmt;
 
@@ -9,13 +9,13 @@ impl CallSite {
     }
 
     /// Entity.
-    pub fn entity(&self) -> Result<floria_bindings::Entity, String> {
+    pub fn entity(&self) -> Result<floria_bindings::Entity, DispatchError> {
         // TODO: cache it
         Ok(host::get_entity(&self.id)?)
     }
 
     /// Property value.
-    pub fn property_value(&self) -> Result<Option<Expression>, String> {
+    pub fn property_value(&self) -> Result<Option<Expression>, DispatchError> {
         Ok(match &self.property {
             Some(property) => self.entity()?.property(property).and_then(|property| property.value()),
             None => None,
@@ -23,7 +23,7 @@ impl CallSite {
     }
 
     /// Property metadata string.
-    pub fn property_metadata_string(&self, key: &str) -> Result<Option<String>, String> {
+    pub fn property_metadata_string(&self, key: &str) -> Result<Option<String>, DispatchError> {
         Ok(match &self.property {
             Some(property) => self.entity()?.property(property).and_then(|property| property.metadata_string(key)),
             None => None,

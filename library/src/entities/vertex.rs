@@ -5,10 +5,8 @@ use super::{
 };
 
 use {
-    kutil::{
-        cli::depict::*,
-        std::{immutable::*, iter::*},
-    },
+    depiction::*,
+    kutil::std::{immutable::*, iter::*},
     std::{collections::*, io},
 };
 
@@ -73,7 +71,7 @@ impl Vertex {
 
         if !embedded {
             if let Some(containing_vertex_id) = &self.containing_vertex_id {
-                map.insert("containing_vertex_id".into(), containing_vertex_id.to_string().into());
+                map.insert("containing-vertex-id".into(), containing_vertex_id.to_string().into());
             }
         }
 
@@ -86,9 +84,9 @@ impl Vertex {
                         None => {}
                     }
                 }
-                map.insert("contained_vertexes".into(), contained_vertexes.into());
+                map.insert("contained-vertexes".into(), contained_vertexes.into());
             } else {
-                displays_into_expressions(&mut map, "contained_vertex_ids", self.contained_vertex_ids);
+                displays_into_expressions(&mut map, "contained-vertex-ids", self.contained_vertex_ids);
             }
         }
 
@@ -100,14 +98,14 @@ impl Vertex {
                         outgoing_edges.push(edge.into_expression(embedded, store)?);
                     }
                 }
-                map.insert("outgoing_edges".into(), outgoing_edges.into());
+                map.insert("outgoing-edges".into(), outgoing_edges.into());
             } else {
-                displays_into_expressions(&mut map, "outgoing_edge_ids", self.outgoing_edge_ids);
+                displays_into_expressions(&mut map, "outgoing-edge-ids", self.outgoing_edge_ids);
             }
         }
 
         if !embedded && !self.incoming_edge_ids.is_empty() {
-            displays_into_expressions(&mut map, "incoming_edge_ids", self.incoming_edge_ids);
+            displays_into_expressions(&mut map, "incoming-edge-ids", self.incoming_edge_ids);
         }
 
         Ok(Expression::Map(map))

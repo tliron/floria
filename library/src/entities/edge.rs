@@ -5,7 +5,7 @@ use super::{
 };
 
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{collections::*, io},
 };
 
@@ -37,10 +37,10 @@ impl Edge {
         self.instance.into_expression(&mut map, embedded, store)?;
 
         if !embedded {
-            map.insert("source_vertex_id".into(), self.source_vertex_id.to_string().into());
+            map.insert("source-vertex-id".into(), self.source_vertex_id.to_string().into());
         }
 
-        map.insert("target_vertex_id".into(), self.target_vertex_id.to_string().into());
+        map.insert("target-vertex-id".into(), self.target_vertex_id.to_string().into());
 
         Ok(map.into())
     }

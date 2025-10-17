@@ -10,15 +10,15 @@ impl Expression {
     /// Evaluate the expression.
     ///
     /// Eager calls will be dispatched here.
-    pub fn evaluate<StoreT, ErrorRecipientT>(
-        &self,
+    pub fn evaluate<StoreT, ErrorReceiverT>(
+        self,
         call_site: &plugins::CallSite,
         library: &mut plugins::Library<StoreT>,
-        errors: &mut ErrorRecipientT,
+        errors: &mut ErrorReceiverT,
     ) -> Result<Option<Expression>, FloriaError>
     where
         StoreT: Clone + Send + Store,
-        ErrorRecipientT: ErrorRecipient<FloriaError>,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
         match self {
             Self::List(list) => {
@@ -43,11 +43,11 @@ impl Expression {
                 if matches!(call.kind, CallKind::Eager) {
                     call.dispatch(call_site, library, errors)
                 } else {
-                    Ok(Some(self.clone()))
+                    Ok(Some(Self::Call(call)))
                 }
             }
 
-            _ => Ok(Some(self.clone())),
+            _ => Ok(Some(self)),
         }
     }
 }

@@ -1,8 +1,6 @@
 use {
-    kutil::{
-        cli::depict::*,
-        std::{immutable::*, iter::*},
-    },
+    depiction::*,
+    kutil::std::{immutable::*, iter::*},
     std::{convert::*, fmt, io, slice, str::*, vec},
 };
 

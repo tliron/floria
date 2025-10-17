@@ -1,7 +1,4 @@
-use {
-    kutil::{cli::depict::*, std::*},
-    std::io,
-};
+use {depiction::*, kutil::std::*, std::io};
 
 //
 // EntityKind

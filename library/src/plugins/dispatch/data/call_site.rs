@@ -3,7 +3,7 @@ use super::super::super::super::data::*;
 pub use super::super::super::bindings::exports::floria::plugins::dispatch::CallSite;
 
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{fmt, io},
 };
 

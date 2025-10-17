@@ -7,22 +7,22 @@ use super::super::{
 use kutil::std::error::*;
 
 impl Vertex {
-    /// Update.
-    pub fn update<StoreT, ErrorRecipientT>(
+    /// Update properties.
+    pub fn update_properties<StoreT, ErrorReceiverT>(
         &mut self,
         propagation: &mut Propagation,
         library: &mut Library<StoreT>,
-        errors: &mut ErrorRecipientT,
+        errors: &mut ErrorReceiverT,
     ) -> Result<(), FloriaError>
     where
         StoreT: Clone + Send + Store,
-        ErrorRecipientT: ErrorRecipient<FloriaError>,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
-        if self.instance.update(library, errors)? {
+        if self.instance.update_properties(library, errors)? {
             library.store.add_vertex(self.clone())?;
         }
 
-        if self.instance.prepare(library, errors)? {
+        if self.instance.prepare_properties(library, errors)? {
             library.store.add_vertex(self.clone())?;
         }
 
@@ -31,7 +31,7 @@ impl Vertex {
         {
             if propagation.should(containing_vertex_id) {
                 if let Some(mut containing_vertex) = library.store.get_vertex(containing_vertex_id)? {
-                    containing_vertex.update(propagation, library, errors)?;
+                    containing_vertex.update_properties(propagation, library, errors)?;
                 }
             }
         }
@@ -40,7 +40,7 @@ impl Vertex {
             for contained_vertex_id in &self.contained_vertex_ids {
                 if propagation.should(contained_vertex_id) {
                     if let Some(mut contained_vertex) = library.store.get_vertex(contained_vertex_id)? {
-                        contained_vertex.update(propagation, library, errors)?;
+                        contained_vertex.update_properties(propagation, library, errors)?;
                     }
                 }
             }
@@ -50,7 +50,7 @@ impl Vertex {
             for incoming_edge_id in &self.incoming_edge_ids {
                 if propagation.should(incoming_edge_id) {
                     if let Some(mut incoming_edge) = library.store.get_edge(incoming_edge_id)? {
-                        incoming_edge.update(propagation, library, errors)?;
+                        incoming_edge.update_properties(propagation, library, errors)?;
                     }
                 }
             }
@@ -60,7 +60,7 @@ impl Vertex {
             for outgoing_edge_id in &self.outgoing_edge_ids {
                 if propagation.should(outgoing_edge_id) {
                     if let Some(mut outgoing_edge) = library.store.get_edge(outgoing_edge_id)? {
-                        outgoing_edge.update(propagation, library, errors)?;
+                        outgoing_edge.update_properties(propagation, library, errors)?;
                     }
                 }
             }
@@ -70,15 +70,15 @@ impl Vertex {
     }
 
     /// Instantiate edges.
-    pub fn instantiate_edges<StoreT, ErrorRecipientT>(
+    pub fn instantiate_edges<StoreT, ErrorReceiverT>(
         &self,
         directory: &Directory,
         library: &mut Library<StoreT>,
-        errors: &mut ErrorRecipientT,
+        errors: &mut ErrorReceiverT,
     ) -> Result<(), FloriaError>
     where
         StoreT: Clone + Send + Store,
-        ErrorRecipientT: ErrorRecipient<FloriaError>,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
         for contained_vertex_id in &self.contained_vertex_ids {
             match library.store.get_vertex(contained_vertex_id)? {

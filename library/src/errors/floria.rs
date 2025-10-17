@@ -4,10 +4,8 @@ use super::{
 };
 
 use {
-    kutil::{
-        cli::depict::*,
-        std::{collections::*, error::*, iter::*},
-    },
+    depiction::*,
+    kutil::std::{collections::*, error::*, iter::*},
     std::io,
     thiserror::*,
 };
@@ -125,7 +123,11 @@ impl<'own> Depict for DepictFloriaErrors<'own> {
                 context.indent_into_branch(writer, last)?;
                 error.depict(
                     writer,
-                    &context.child().increase_indentation_branch(last).with_configuration("variant", "false"),
+                    &context
+                        .child()
+                        .with_separator(false)
+                        .increase_indentation_branch(last)
+                        .with_configuration("variant", "false"),
                 )?;
             }
         }

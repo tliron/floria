@@ -10,15 +10,17 @@ Floria is a [graph database](https://en.wikipedia.org/wiki/Graph_database). We s
 
 In Floria, graph vertexes and edges are both first-class citizens with custom data and metadata. If vertexes are the bones and muscles, then edges are the connective tissue.
 
-Vertexes can represent software or hardware components at any level from infrastructure to application, as well as logical configurations that exist purely as data (and metadata). Vertexes can be nested within other vertexes recursively.
+Vertexes can represent software or hardware components at any level from infrastructure to application, as well as logical configurations that exist purely as data (and metadata).
 
 Edges can represent actual connections, such as network routes, ports, and secure channels, as well as logical dependencies.
 
-Both vertexes and edges can be assigned to any number of "classes", which can be organized hierarchically. Classes can be used to associate metadata, run operations, and apply policies to any number of entities at once.
+| Floria allows vertexes to be nested within other vertexes recursively. This feature is wholly about optimization, as it could also be handled via edges: namely a "contains" edge between the containing vertex and a contained vertex. However, because this particular kind of relationship is very commonly used for composition and namespacing it is given first-class treatment.
 
-Additionally, Floria can represent templates for these topologies. Though you can design templates directly in Floria, higher levels of abstraction are possible and useful. For example, you can compile [TOSCA](https://docs.oasis-open.org/tosca/TOSCA/v2.0/TOSCA-v2.0.html) to Floria with [Puccini](https://puccini.cloud).
+Both vertexes and edges can be assigned to any number of "classes". Classes can be used to associate metadata, send events, and apply policies to any number of entities at once. Classes are intentionally simple, designed for metadata, not data, and do not participate in the graph.
 
-All the above entities live in nested directories that can be used to organize them hierarchically. Directories function as namespaces and are gated with role-based permissions, which allows a single Floria service to support multiple tenants. Note that edges can connect vertexes between different directories should the permissions allow it.
+Finally, Floria can represent templates for these topologies. Though you can design templates directly in Floria, higher levels of abstraction are possible and useful. For example, you can compile [TOSCA](https://docs.oasis-open.org/tosca/TOSCA/v2.0/TOSCA-v2.0.html) to Floria templates via [Puccini](https://puccini.cloud).
+
+All the above entities live in nested directories that can be used to organize them hierarchically. Directories function as namespaces and are gated with role-based permissions, which allows a single running Floria service to support multiple tenants. Note that edges can connect vertexes between different directories should the permissions allow it.
 
 Floria data is designed to be portable and communicable. Entities can be dumped into and imported from CBOR, MessagePack, JSON, and YAML formats.
 

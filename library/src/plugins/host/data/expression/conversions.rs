@@ -1,4 +1,4 @@
-use super::{
+use super::super::{
     super::{
         super::{
             super::{data::*, store::*},
@@ -13,26 +13,7 @@ use super::{
     map::Map as BindingsMap,
 };
 
-use {std::collections::*, wasmtime::component::Resource};
-
-impl Clone for bindings::Expression {
-    fn clone(&self) -> bindings::Expression {
-        match self {
-            Self::Null => Self::Null,
-            Self::Integer(integer) => Self::Integer(*integer),
-            Self::UnsignedInteger(unsigned_integer) => Self::UnsignedInteger(*unsigned_integer),
-            Self::Float(float) => Self::Float(*float),
-            Self::Boolean(boolean) => Self::Boolean(*boolean),
-            Self::Text(text) => Self::Text(text.clone()),
-            Self::Blob(blob) => Self::Blob(blob.clone()),
-            // TODO: own or borrow?
-            Self::List(resource) => Self::List(Resource::new_own(resource.rep())),
-            Self::Map(resource) => Self::Map(Resource::new_own(resource.rep())),
-            Self::Custom(resource) => Self::Custom(Resource::new_own(resource.rep())),
-            Self::Call(resource) => Self::Call(Resource::new_own(resource.rep())),
-        }
-    }
-}
+use std::collections::*;
 
 impl<StoreT> PluginHost<StoreT>
 where
@@ -109,7 +90,7 @@ where
             bindings::Expression::Blob(blob) => Ok(Expression::Blob(blob.into())),
 
             bindings::Expression::List(resource) => {
-                let list = self.resources.get(&resource).map_err(PluginError::WasmResource)?.inner.clone();
+                let list = self.resources.get(&resource).map_err(PluginError::WasmResource)?.list.clone();
 
                 let mut items = Vec::with_capacity(list.len());
                 for item in list {
@@ -120,7 +101,8 @@ where
             }
 
             bindings::Expression::Map(resource) => {
-                let key_value_pairs = self.resources.get(&resource).map_err(PluginError::WasmResource)?.inner.clone();
+                let key_value_pairs =
+                    self.resources.get(&resource).map_err(PluginError::WasmResource)?.key_value_pairs.clone();
 
                 let mut map = BTreeMap::default();
                 for (key, value) in key_value_pairs {

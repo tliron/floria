@@ -1,7 +1,7 @@
 use super::{super::data::*, vertex_finder::*};
 
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{collections::*, io},
 };
 

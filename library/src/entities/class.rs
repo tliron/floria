@@ -4,7 +4,8 @@ use super::{
 };
 
 use {
-    kutil::{cli::depict::*, std::immutable::*},
+    depiction::*,
+    kutil::std::immutable::*,
     std::{collections::*, io},
 };
 
@@ -20,12 +21,6 @@ pub struct Class {
 
     /// Metadata.
     pub metadata: Metadata,
-
-    /// TODO: Parent class IDs.
-    pub parent_class_ids: Vec<ID>,
-
-    /// TODO: Child class IDs.
-    pub child_class_ids: Vec<ID>,
 }
 
 impl Class {
@@ -36,12 +31,7 @@ impl Class {
 
     /// Constructor.
     pub fn new_with(id: ID) -> Self {
-        Self {
-            id,
-            metadata: Default::default(),
-            parent_class_ids: Default::default(),
-            child_class_ids: Default::default(),
-        }
+        Self { id, metadata: Default::default() }
     }
 
     /// To [Depict].

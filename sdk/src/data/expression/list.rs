@@ -7,6 +7,11 @@ use std::{
 };
 
 impl ListResource {
+    /// Into list.
+    pub fn into_list(self) -> List {
+        self.into_inner()
+    }
+
     /// Get list.
     pub fn list(&self) -> &List {
         self.get()
@@ -34,7 +39,7 @@ impl GuestListResource for List {
         Self::from(list)
     }
 
-    fn get(&self) -> Vec<Expression> {
+    fn inner(&self) -> Vec<Expression> {
         self.clone().inner
     }
 

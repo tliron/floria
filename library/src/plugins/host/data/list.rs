@@ -9,14 +9,14 @@ use wasmtime::component::*;
 /// List.
 #[derive(Clone, Debug, Default)]
 pub struct List {
-    /// Inner.
-    pub inner: Vec<bindings::Expression>,
+    /// List.
+    pub list: Vec<bindings::Expression>,
 }
 
 impl List {
     /// Constructor.
-    pub fn new(inner: Vec<bindings::Expression>) -> Self {
-        Self { inner }
+    pub fn new(list: Vec<bindings::Expression>) -> Self {
+        Self { list }
     }
 }
 
@@ -33,13 +33,13 @@ where
         Ok(())
     }
 
-    fn get(&mut self, resource: Resource<List>) -> wasmtime::Result<Vec<bindings::Expression>> {
+    fn inner(&mut self, resource: Resource<List>) -> wasmtime::Result<Vec<bindings::Expression>> {
         let list = self.resources.get(&resource)?;
-        Ok(list.inner.clone())
+        Ok(list.list.clone())
     }
 
     fn length(&mut self, resource: Resource<List>) -> wasmtime::Result<u64> {
         let list = self.resources.get(&resource)?;
-        Ok(list.inner.len() as u64)
+        Ok(list.list.len() as u64)
     }
 }

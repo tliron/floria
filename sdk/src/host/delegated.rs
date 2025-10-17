@@ -39,14 +39,14 @@ impl Clone for Expression {
             Self::Boolean(boolean) => Self::Boolean(*boolean),
             Self::Text(text) => Self::Text(text.clone()),
             Self::Blob(blob) => Self::Blob(blob.clone()),
-            Self::List(list_resource) => Self::List(ListResource::new(list_resource.get())),
-            Self::Map(map_resource) => Self::Map(MapResource::new(map_resource.get())),
+            Self::List(list_resource) => Self::List(ListResource::new(list_resource.inner())),
+            Self::Map(map_resource) => Self::Map(MapResource::new(map_resource.inner())),
             Self::Custom(custom_resource) => {
-                let (kind, inner) = custom_resource.get();
+                let (kind, inner) = custom_resource.inner();
                 Self::Custom(CustomResource::new(&kind, inner))
             }
             Self::Call(call_resource) => {
-                let (plugin, function, arguments, kind) = call_resource.get();
+                let (plugin, function, arguments, kind) = call_resource.inner();
                 Self::Call(CallResource::new(&plugin, &function, arguments, kind))
             }
         }
@@ -66,14 +66,16 @@ impl PartialEq for Expression {
             (Self::Text(text), Self::Text(other_text)) => text == other_text,
             (Self::Blob(blob), Self::Blob(other_blob)) => blob == other_blob,
             (Self::List(list_resource), Self::List(other_list_resource)) => {
-                list_resource.get() == other_list_resource.get()
+                list_resource.inner() == other_list_resource.inner()
             }
-            (Self::Map(map_resource), Self::Map(other_map_resource)) => map_resource.get() == other_map_resource.get(),
+            (Self::Map(map_resource), Self::Map(other_map_resource)) => {
+                map_resource.inner() == other_map_resource.inner()
+            }
             (Self::Custom(custom_resource), Self::Custom(other_custom_resource)) => {
-                custom_resource.get() == other_custom_resource.get()
+                custom_resource.inner() == other_custom_resource.inner()
             }
             (Self::Call(call_resource), Self::Call(other_call_resource)) => {
-                call_resource.get() == other_call_resource.get()
+                call_resource.inner() == other_call_resource.inner()
             }
 
             _ => false,

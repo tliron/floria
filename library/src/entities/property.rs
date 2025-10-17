@@ -5,7 +5,8 @@ use super::{
 };
 
 use {
-    kutil::{cli::depict::*, std::immutable::*},
+    depiction::*,
+    kutil::std::immutable::*,
     std::{collections::*, io},
 };
 
@@ -58,7 +59,7 @@ impl Property {
         map.insert("metadata".into(), metadata_into_expression(self.metadata));
         classes_into_expression(store, &mut map, embedded, self.class_ids)?;
 
-        map.insert("read_only".into(), self.read_only.into());
+        map.insert("read-only".into(), self.read_only.into());
 
         if let Some(value) = self.value {
             map.insert("value".into(), value);

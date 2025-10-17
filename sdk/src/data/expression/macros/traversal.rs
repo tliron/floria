@@ -9,7 +9,7 @@
 /// The keys are either [Expression](crate::data::Expression) or anything that implements
 /// [Into]<[Expression](crate::data::Expression)>, which includes all the supported primitive types.
 #[macro_export]
-macro_rules! traverse(
+macro_rules! traverse {
     ( $value:expr $(,)? ) => ( ::std::option::Option::<&$crate::functions::Expression>::Some(&$value) );
 
     ( $value:expr, $key:expr $(,)? ) => ( $value.into_get($key) );
@@ -20,7 +20,7 @@ macro_rules! traverse(
             ::std::option::Option::None => ::std::option::Option::None,
         }
     );
-);
+}
 
 #[allow(unused_imports)]
 pub use traverse;

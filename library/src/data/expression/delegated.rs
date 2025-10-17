@@ -1,7 +1,7 @@
 use super::expression::*;
 
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{cmp::*, fmt, hash::*, io},
 };
 

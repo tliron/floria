@@ -8,16 +8,16 @@ use kutil::std::error::*;
 
 impl VertexTemplate {
     /// Instantiate.
-    pub fn instantiate<StoreT, ErrorRecipientT>(
+    pub fn instantiate<StoreT, ErrorReceiverT>(
         &self,
         directory: &Directory,
         containing_vertex_id: Option<ID>,
         library: &mut Library<StoreT>,
-        errors: &mut ErrorRecipientT,
+        errors: &mut ErrorReceiverT,
     ) -> Result<Vertex, FloriaError>
     where
         StoreT: Clone + Send + Store,
-        ErrorRecipientT: ErrorRecipient<FloriaError>,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
         let vertex_id = self.instantiate_vertexes(directory, containing_vertex_id, library, errors)?;
         let vertex = library.store.get_vertex(&vertex_id)?.ok_or_else(|| StoreError::ID(vertex_id.to_string()))?;
@@ -28,16 +28,16 @@ impl VertexTemplate {
     }
 
     /// Instantiate vertexes.
-    pub fn instantiate_vertexes<StoreT, ErrorRecipientT>(
+    pub fn instantiate_vertexes<StoreT, ErrorReceiverT>(
         &self,
         directory: &Directory,
         containing_vertex_id: Option<ID>,
         library: &mut Library<StoreT>,
-        errors: &mut ErrorRecipientT,
+        errors: &mut ErrorReceiverT,
     ) -> Result<ID, FloriaError>
     where
         StoreT: Store,
-        ErrorRecipientT: ErrorRecipient<FloriaError>,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
         let mut vertex = Vertex {
             instance: self.template.instantiate(EntityKind::Vertex, directory, &library.store)?,

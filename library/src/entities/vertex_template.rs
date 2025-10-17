@@ -5,10 +5,8 @@ use super::{
 };
 
 use {
-    kutil::{
-        cli::depict::*,
-        std::{immutable::*, iter::*},
-    },
+    depiction::*,
+    kutil::std::{immutable::*, iter::*},
     std::{collections::*, io},
 };
 
@@ -69,7 +67,7 @@ impl VertexTemplate {
 
         if !embedded {
             if let Some(containing_vertex_template_id) = &self.containing_vertex_template_id {
-                map.insert("containing_vertex_template_id".into(), containing_vertex_template_id.to_string().into());
+                map.insert("containing-vertex-template-id".into(), containing_vertex_template_id.to_string().into());
             }
         }
 
@@ -84,11 +82,11 @@ impl VertexTemplate {
                         None => {}
                     }
                 }
-                map.insert("contained_vertex_templates".into(), contained_vertex_templates.into());
+                map.insert("contained-vertex-templates".into(), contained_vertex_templates.into());
             } else {
                 displays_into_expressions(
                     &mut map,
-                    "contained_vertex_template_ids",
+                    "contained-vertex-template-ids",
                     self.contained_vertex_template_ids,
                 );
             }
@@ -105,9 +103,9 @@ impl VertexTemplate {
                         None => {}
                     }
                 }
-                map.insert("outgoing_edge_templates".into(), outgoing_edge_templates.into());
+                map.insert("outgoing-edge-templates".into(), outgoing_edge_templates.into());
             } else {
-                displays_into_expressions(&mut map, "outgoing_edge_template_ids", self.outgoing_edge_template_ids);
+                displays_into_expressions(&mut map, "outgoing-edge-template-ids", self.outgoing_edge_template_ids);
             }
         }
 

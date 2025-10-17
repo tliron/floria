@@ -3,18 +3,28 @@
 #![warn(missing_docs)]
 
 /*!
-Floria is a data system for cloud orchestration.
+A dual-paradigm data system for cloud orchestration.
 
-It consists of a data model (data-driven) integrated with a plugin execution mechanism
-(event-driven), which has first-class support for [Wasm](https://webassembly.org/).
+It consists of a data model (the declarative paradigm) integrated with an event-driven plugin
+execution mechanism (the imperative paradigm), with first-class support for
+[Wasm](https://webassembly.org) plugins.
 
-For a Floria-based orchestrator, see [Khutulun](https://github.com/tliron/rust-khutulun).
+This project comprises:
 
-For a [TOSCA](https://www.oasis-open.org/committees/tosca/) frontend for Floria, see
-[Puccini](https://github.com/tliron/rust-puccini).
+* Storage backends for graph, relational, and "no-SQL" databases
+* CLI tools
+* A rich terminal UI
+* A rich web UI with graphical visualization of topologies
+* A library for working with Floria data and plugins
+* An SDK for building Wasm plugins for Floria
 
-For more information and usage examples see the
-[home page](https://github.com/tliron/floria).
+For a Floria-based orchestrator, see [Khutulun](https://khutulun.org).
+
+For a [TOSCA](https://docs.oasis-open.org/tosca/TOSCA/v2.0/TOSCA-v2.0.html) frontend for Floria,
+see [Puccini](https://puccini.cloud).
+
+For documentation and usage examples see the
+[Floria site](https://floria.khutulun.org).
 */
 
 mod data;

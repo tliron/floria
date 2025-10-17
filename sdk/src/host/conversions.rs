@@ -56,23 +56,23 @@ impl From<&Expression> for data::Expression {
             Expression::Blob(blob) => Self::Blob(blob.clone()),
 
             Expression::List(list_resource) => {
-                let list: Vec<Self> = list_resource.get().into_iter().map(|item| item.into()).collect();
+                let list: Vec<Self> = list_resource.inner().into_iter().map(|item| item.into()).collect();
                 list.into()
             }
 
             Expression::Map(map_resource) => {
                 let map: BTreeMap<_, _> =
-                    map_resource.get().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
+                    map_resource.inner().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
                 map.into()
             }
 
             Expression::Custom(custom_resource) => {
-                let (kind, inner) = custom_resource.get();
+                let (kind, inner) = custom_resource.inner();
                 data::Custom { kind, inner: inner.into() }.into()
             }
 
             Expression::Call(call_resource) => {
-                let (plugin, function, arguments, kind) = call_resource.get();
+                let (plugin, function, arguments, kind) = call_resource.inner();
                 let arguments: Vec<_> = arguments.into_iter().map(|item| item.into()).collect();
                 data::Call { plugin, function, arguments, kind: kind.into() }.into()
             }
@@ -92,23 +92,23 @@ impl From<Expression> for data::Expression {
             Expression::Blob(blob) => Self::Blob(blob),
 
             Expression::List(list_resource) => {
-                let list: Vec<Self> = list_resource.get().into_iter().map(|item| item.into()).collect();
+                let list: Vec<Self> = list_resource.inner().into_iter().map(|item| item.into()).collect();
                 list.into()
             }
 
             Expression::Map(map_resource) => {
                 let map: BTreeMap<_, _> =
-                    map_resource.get().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
+                    map_resource.inner().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
                 map.into()
             }
 
             Expression::Custom(custom_resource) => {
-                let (kind, inner) = custom_resource.get();
+                let (kind, inner) = custom_resource.inner();
                 data::Custom { kind, inner: inner.into() }.into()
             }
 
             Expression::Call(call_resource) => {
-                let (plugin, function, arguments, kind) = call_resource.get();
+                let (plugin, function, arguments, kind) = call_resource.inner();
                 let arguments: Vec<_> = arguments.into_iter().map(|item| item.into()).collect();
                 data::Call { plugin, function, arguments, kind: kind.into() }.into()
             }
@@ -128,28 +128,24 @@ impl From<data::Expression> for Expression {
             data::Expression::Blob(blob) => Self::Blob(blob),
 
             data::Expression::List(list_resource) => {
-                let list: Vec<_> = list_resource.list().inner.iter().map(|item| item.clone().into()).collect();
+                let list: Vec<_> = list_resource.into_list().inner.into_iter().map(|item| item.into()).collect();
                 Self::List(ListResource::new(list))
             }
 
             data::Expression::Map(map_resource) => {
-                let key_value_pairs: Vec<_> = map_resource
-                    .map()
-                    .inner
-                    .iter()
-                    .map(|(key, value)| (key.clone().into(), value.clone().into()))
-                    .collect();
+                let key_value_pairs: Vec<_> =
+                    map_resource.into_map().inner.into_iter().map(|(key, value)| (key.into(), value.into())).collect();
                 Self::Map(MapResource::new(key_value_pairs))
             }
 
             data::Expression::Custom(custom_resource) => {
-                let custom = custom_resource.custom();
-                Self::Custom(CustomResource::new(&custom.kind, custom.inner.clone().into()))
+                let custom = custom_resource.into_custom();
+                Self::Custom(CustomResource::new(&custom.kind, custom.inner.into()))
             }
 
             data::Expression::Call(call_resource) => {
-                let call = call_resource.call();
-                let arguments: Vec<_> = call.arguments.iter().map(|item| item.clone().into()).collect();
+                let call = call_resource.into_call();
+                let arguments: Vec<_> = call.arguments.into_iter().map(|item| item.into()).collect();
                 Self::Call(CallResource::new(&call.plugin, &call.function, arguments, call.kind.into()))
             }
         }

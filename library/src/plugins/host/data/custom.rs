@@ -39,7 +39,7 @@ where
         Ok(())
     }
 
-    fn get(&mut self, resource: Resource<Custom>) -> wasmtime::Result<(String, bindings::Expression)> {
+    fn inner(&mut self, resource: Resource<Custom>) -> wasmtime::Result<(String, bindings::Expression)> {
         let custom = self.resources.get(&resource)?;
         Ok((custom.kind.clone(), custom.inner.clone()))
     }

@@ -6,7 +6,7 @@ use super::{
 
 impl Metadata for floria_bindings::Vertex {
     fn metadata(&self) -> Vec<(floria_bindings::Expression, floria_bindings::Expression)> {
-        self.metadata.get()
+        self.metadata.inner()
     }
 
     fn class_ids(&self) -> &Vec<floria_bindings::Id> {

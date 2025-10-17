@@ -60,7 +60,7 @@ impl Instance {
         map.insert("id".into(), self.id.to_string().into());
 
         if let Some(origin_template_id) = &self.origin_template_id {
-            map.insert("origin_template_id".into(), origin_template_id.to_string().into());
+            map.insert("origin-template-id".into(), origin_template_id.to_string().into());
         }
 
         map.insert("metadata".into(), metadata_into_expression(self.metadata));

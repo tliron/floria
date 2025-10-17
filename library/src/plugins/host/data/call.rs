@@ -45,8 +45,7 @@ where
         arguments: Vec<bindings::Expression>,
         kind: bindings::CallKind,
     ) -> wasmtime::Result<Resource<Call>> {
-        let call = Call::new(plugin, function, arguments, kind);
-        Ok(self.resources.push(call)?)
+        Ok(self.resources.push(Call::new(plugin, function, arguments, kind))?)
     }
 
     fn drop(&mut self, resource: Resource<Call>) -> wasmtime::Result<()> {
@@ -54,7 +53,7 @@ where
         Ok(())
     }
 
-    fn get(
+    fn inner(
         &mut self,
         resource: Resource<Call>,
     ) -> wasmtime::Result<(String, String, Vec<bindings::Expression>, bindings::CallKind)> {

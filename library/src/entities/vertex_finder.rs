@@ -1,7 +1,7 @@
 use super::super::data::*;
 
 use {
-    kutil::cli::depict::*,
+    depiction::*,
     std::{collections::*, io},
 };
 
