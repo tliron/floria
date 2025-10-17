@@ -1,3 +1,5 @@
+use super::super::*;
+
 use std::fmt;
 
 /// Depiction markup delimiter.
@@ -21,14 +23,14 @@ where
 /// Map escape depiction error.
 pub trait MapEscapeDepictionError<OkT> {
     /// Map escape depiction error.
-    fn map_escape_depiction_error(self) -> Result<OkT, String>;
+    fn map_escape_depiction_error(self) -> Result<OkT, DispatchError>;
 }
 
 impl<OkT, FromErrorT> MapEscapeDepictionError<OkT> for Result<OkT, FromErrorT>
 where
     FromErrorT: fmt::Display,
 {
-    fn map_escape_depiction_error(self) -> Result<OkT, String> {
+    fn map_escape_depiction_error(self) -> Result<OkT, DispatchError> {
         self.map_err(|error| escape_depiction_markup(error))
     }
 }

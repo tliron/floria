@@ -39,7 +39,7 @@ wasmtime-wasi = { optional = true, version = "37.0.2", default-features = false,
 
 [features]
 plugins = ["dep:wasmtime", "dep:wasmtime-wasi"]
-wasm_debug = [
+wasm-debug = [
     "wasmtime/demangle",
     "wasmtime/profiling",
     "wasmtime/coredump",

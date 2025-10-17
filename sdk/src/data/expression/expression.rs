@@ -1,5 +1,5 @@
 use super::{
-    super::super::{dispatch_bindings::*, errors},
+    super::super::{dispatch_bindings::*, *},
     custom::*,
 };
 
@@ -72,7 +72,7 @@ impl Expression {
     }
 
     /// Assert same type.
-    pub fn assert_same_type(&self, other: &Expression, operator: &str) -> Result<(), String> {
+    pub fn assert_same_type(&self, other: &Expression, operator: &str) -> Result<(), DispatchError> {
         if self.same_type(other) { Ok(()) } else { Err(errors::not_same_type(self, other, operator)) }
     }
 
@@ -105,7 +105,7 @@ impl Expression {
     ///
     /// Lazy calls are not dispatched here. They must be dispatched manually, e.g. via
     /// [dispatch_if_call](Expression::dispatch_if_call).
-    pub fn evaluate(self, call_site: &CallSite) -> Result<Option<Expression>, String> {
+    pub fn evaluate(self, call_site: &CallSite) -> Result<Option<Expression>, DispatchError> {
         if let Expression::Call(call_resource) = &self
             && matches!(call_resource.call().kind, CallKind::Lazy)
         {
@@ -169,13 +169,13 @@ impl Expression {
     ///
     /// Lazy calls are not dispatched here. They must be dispatched manually, e.g. via
     /// [dispatch_if_call](Expression::dispatch_if_call).
-    pub fn must_evaluate(self, call_site: &CallSite) -> Result<Expression, String> {
+    pub fn must_evaluate(self, call_site: &CallSite) -> Result<Expression, DispatchError> {
         let type_name = self.type_name();
         self.evaluate(call_site)?.ok_or_else(|| format!("expression evaluated to nothing: |error|{}|", type_name))
     }
 
     /// Dispatch if we are a call, otherwise return self.
-    pub fn dispatch_if_call(self, call_site: &CallSite) -> Result<Option<Expression>, String> {
+    pub fn dispatch_if_call(self, call_site: &CallSite) -> Result<Option<Expression>, DispatchError> {
         if let Expression::Call(call_resource) = self {
             call_resource.call().dispatch(call_site)
         } else {
@@ -186,7 +186,7 @@ impl Expression {
     /// Dispatch if we are a call, otherwise return self.
     ///
     /// Returns an error if the call returns nothing.
-    pub fn must_dispatch_if_call(self, call_site: &CallSite) -> Result<Expression, String> {
+    pub fn must_dispatch_if_call(self, call_site: &CallSite) -> Result<Expression, DispatchError> {
         self.dispatch_if_call(call_site)?.ok_or_else(|| "call returned nothing".into())
     }
 }

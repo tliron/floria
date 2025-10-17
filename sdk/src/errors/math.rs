@@ -1,7 +1,9 @@
+use super::super::*;
+
 use std::fmt;
 
 /// Integer fit.
-pub fn integer_fit<DisplayT>(number: DisplayT) -> String
+pub fn integer_fit<DisplayT>(number: DisplayT) -> DispatchError
 where
     DisplayT: fmt::Display,
 {
@@ -9,7 +11,7 @@ where
 }
 
 /// Unsigned integer fit.
-pub fn unsigned_integer_fit<DisplayT>(number: DisplayT) -> String
+pub fn unsigned_integer_fit<DisplayT>(number: DisplayT) -> DispatchError
 where
     DisplayT: fmt::Display,
 {
@@ -17,7 +19,7 @@ where
 }
 
 /// Float fit.
-pub fn float_fit<DisplayT>(number: DisplayT) -> String
+pub fn float_fit<DisplayT>(number: DisplayT) -> DispatchError
 where
     DisplayT: fmt::Display,
 {
@@ -25,11 +27,11 @@ where
 }
 
 /// Integer overflow.
-pub fn integer_overflow(left: i64, right: i64, delimiter: &str) -> String {
+pub fn integer_overflow(left: i64, right: i64, delimiter: &str) -> DispatchError {
     format!("integer overflow: |error|{} {} {}|", left, delimiter, right)
 }
 
 /// Unsigned integer overflow.
-pub fn unsigned_integer_overflow(left: u64, right: u64, delimiter: &str) -> String {
+pub fn unsigned_integer_overflow(left: u64, right: u64, delimiter: &str) -> DispatchError {
     format!("unsigned integer overflow: |error|{} {} {}|", left, delimiter, right)
 }

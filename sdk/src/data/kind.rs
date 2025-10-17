@@ -1,4 +1,4 @@
-use super::super::data::*;
+use super::super::{data::*, *};
 
 use std::fmt;
 
@@ -49,7 +49,7 @@ impl Into<&'static str> for &EntityKind {
 }
 
 impl TryFrom<&str> for EntityKind {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {

@@ -1,4 +1,4 @@
-use super::super::super::{dispatch_bindings::*, utils::*};
+use super::super::super::{dispatch_bindings::*, utils::*, *};
 
 use std::{cmp::*, fmt, hash::*};
 
@@ -35,7 +35,7 @@ impl Custom {
     }
 
     /// Assert kind.
-    pub fn assert_kind(&self, kind: &str, type_name: &str) -> Result<(), String> {
+    pub fn assert_kind(&self, kind: &str, type_name: &str) -> Result<(), DispatchError> {
         if self.kind == kind {
             Ok(())
         } else {

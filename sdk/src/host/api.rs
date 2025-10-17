@@ -1,4 +1,4 @@
-use super::super::{data, dispatch_bindings, floria_bindings};
+use super::super::*;
 
 // These wrappers expose dispatch types, internally converting to and from host types
 
@@ -14,12 +14,12 @@ macro_rules! log {
 pub fn evaluate_expression(
     expression: &dispatch_bindings::Expression,
     call_site: &dispatch_bindings::CallSite,
-) -> Result<Option<data::Expression>, String> {
+) -> Result<Option<data::Expression>, DispatchError> {
     Ok(floria_bindings::evaluate_expression(expression.clone().into(), &call_site.clone().into())?
         .map(|value| value.into()))
 }
 
 /// Get entity.
-pub fn get_entity(id: &dispatch_bindings::Id) -> Result<floria_bindings::Entity, String> {
+pub fn get_entity(id: &dispatch_bindings::Id) -> Result<floria_bindings::Entity, DispatchError> {
     floria_bindings::get_entity(&id.clone().into())
 }

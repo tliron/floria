@@ -1,5 +1,5 @@
 use super::{
-    super::super::super::{dispatch_bindings::*, utils::*},
+    super::super::super::{dispatch_bindings::*, utils::*, *},
     number::*,
 };
 
@@ -24,7 +24,7 @@ impl From<f64> for Number {
 }
 
 impl FromStr for Number {
-    type Err = String;
+    type Err = DispatchError;
 
     fn from_str(representation: &str) -> Result<Self, Self::Err> {
         if let Ok(unsigned_integer) = representation.parse() {
@@ -44,7 +44,7 @@ impl FromStr for Number {
 }
 
 impl TryFrom<&Expression> for Number {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_from(expression: &Expression) -> Result<Self, Self::Error> {
         match expression {
@@ -61,7 +61,7 @@ impl TryFrom<&Expression> for Number {
 }
 
 impl TryFrom<Expression> for Number {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_from(expression: Expression) -> Result<Self, Self::Error> {
         (&expression).try_into()
@@ -69,7 +69,7 @@ impl TryFrom<Expression> for Number {
 }
 
 impl TryInto<i64> for Number {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_into(self) -> Result<i64, Self::Error> {
         match self {
@@ -89,7 +89,7 @@ impl TryInto<i64> for Number {
 }
 
 impl TryInto<u64> for Number {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_into(self) -> Result<u64, Self::Error> {
         match self {
@@ -109,7 +109,7 @@ impl TryInto<u64> for Number {
 }
 
 impl TryInto<f64> for Number {
-    type Error = String;
+    type Error = DispatchError;
 
     fn try_into(self) -> Result<f64, Self::Error> {
         match self {
