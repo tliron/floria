@@ -42,7 +42,7 @@ pub struct Call {
 impl Call {
     /// Dispatch.
     pub fn dispatch(&self, call_site: &CallSite) -> DispatchResult {
-        let (name, dispatcher) = registered_dispatcher_plugin()?;
+        let (name, dispatcher) = registered_dispatch_plugin()?;
         if self.plugin == name {
             dispatcher(self.function.clone(), self.arguments.clone(), call_site.clone())
         } else {

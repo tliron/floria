@@ -21,7 +21,7 @@ impl Depict for CallSite {
     {
         context.separate(writer)?;
 
-        let id: ID = self.id.clone().into();
+        let id: ID = self.id.clone().try_into().map_err(io::Error::other)?;
         id.kind.depict(writer, context)?;
         id.depict(writer, &context.child().with_separator(true))?;
 
@@ -37,7 +37,7 @@ impl Depict for CallSite {
 
 impl fmt::Display for CallSite {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let id: ID = self.id.clone().into();
+        let id: ID = self.id.clone().try_into().map_err(|_| fmt::Error)?;
         fmt::Display::fmt(&id, formatter)?;
         if let Some(property) = &self.property {
             write!(formatter, ".{}", property)?;

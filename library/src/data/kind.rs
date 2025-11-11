@@ -5,8 +5,12 @@ use {depiction::*, kutil::std::*, std::io};
 //
 
 /// Entity kind.
-#[derive(Clone, Copy, Debug, Display, Eq, FromStr, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Display, Eq, FromStr, Hash, Ord, PartialEq, PartialOrd)]
 pub enum EntityKind {
+    /// Plugin.
+    #[default]
+    Plugin,
+
     /// Class.
     Class,
 

@@ -1,6 +1,11 @@
 use super::{call::*, expression::*};
 
-use {duplicate::*, kutil::std::immutable::*, ordered_float::*, std::collections::*};
+use {
+    duplicate::*,
+    kutil::std::immutable::*,
+    ordered_float::*,
+    std::{borrow::*, collections::*},
+};
 
 #[duplicate_item(
   FromT                              Kind;
@@ -25,6 +30,15 @@ impl From<FromT> for Expression {
 impl From<&'static str> for Expression {
     fn from(value: &'static str) -> Self {
         Self::Text(ByteString::from_static(value))
+    }
+}
+
+impl From<Cow<'_, str>> for Expression {
+    fn from(value: Cow<'_, str>) -> Self {
+        match value {
+            Cow::Borrowed(string) => ByteString::from(string).into(),
+            Cow::Owned(string) => string.into(),
+        }
     }
 }
 

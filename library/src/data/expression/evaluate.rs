@@ -13,7 +13,7 @@ impl Expression {
     pub fn evaluate<StoreT, ErrorReceiverT>(
         self,
         call_site: &plugins::CallSite,
-        library: &mut plugins::Library<StoreT>,
+        context: &mut plugins::PluginContext<StoreT>,
         errors: &mut ErrorReceiverT,
     ) -> Result<Option<Expression>, FloriaError>
     where
@@ -24,7 +24,7 @@ impl Expression {
             Self::List(list) => {
                 let mut expressions = Vec::with_capacity(list.len());
                 for item in list {
-                    expressions.push(item.evaluate(call_site, library, errors)?.unwrap_or_default());
+                    expressions.push(item.evaluate(call_site, context, errors)?.unwrap_or_default());
                 }
                 Ok(Some(expressions.into()))
             }
@@ -32,8 +32,8 @@ impl Expression {
             Self::Map(map) => {
                 let mut expressions = BTreeMap::default();
                 for (key, value) in map {
-                    if let Some(key) = key.evaluate(call_site, library, errors)? {
-                        expressions.insert(key, value.evaluate(call_site, library, errors)?.unwrap_or_default());
+                    if let Some(key) = key.evaluate(call_site, context, errors)? {
+                        expressions.insert(key, value.evaluate(call_site, context, errors)?.unwrap_or_default());
                     }
                 }
                 Ok(Some(expressions.into()))
@@ -41,7 +41,7 @@ impl Expression {
 
             Self::Call(call) => {
                 if matches!(call.kind, CallKind::Eager) {
-                    call.dispatch(call_site, library, errors)
+                    call.dispatch(call_site, context, errors)
                 } else {
                     Ok(Some(Self::Call(call)))
                 }

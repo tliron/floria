@@ -1,4 +1,7 @@
-use super::super::{super::data::*, bindings::exports::floria::plugins::dispatch};
+use super::super::{
+    super::{data::*, errors::*},
+    bindings::exports::floria::plugins::dispatch,
+};
 
 use {
     depiction::*,
@@ -29,8 +32,14 @@ impl DispatchError {
     }
 
     /// ID.
-    pub fn id(&self) -> ID {
-        self.call_site.id.clone().into()
+    pub fn id(&self) -> Result<ID, MalformedError> {
+        self.call_site.id.clone().try_into()
+    }
+}
+
+impl IntoDepictionMarkup for DispatchError {
+    fn into_depiction_markup(self) -> String {
+        format!("{} during {}", self.message, self.call.into_depiction_markup())
     }
 }
 

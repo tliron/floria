@@ -84,7 +84,13 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .call_resource()
-                    .call_constructor(&mut self.host, &call.plugin, &call.function, &arguments, call.kind.into())
+                    .call_constructor(
+                        &mut self.host,
+                        &call.function.plugin_id.to_string(),
+                        &call.function.name,
+                        &arguments,
+                        call.kind.into(),
+                    )
                     .context("calling call constructor")
                     .map_err(PluginError::CallWasm)?;
 
@@ -187,7 +193,8 @@ where
                     expressions.push(self.expression_from_bindings(argument)?);
                 }
 
-                Ok(Call::new(plugin.into(), function.into(), expressions, kind.into()).into())
+                Ok(Call::new(ID::parse(EntityKind::Plugin, &plugin)?, function.into(), expressions, kind.into())?
+                    .into())
             }
         }
     }

@@ -10,7 +10,7 @@ impl VertexSelector {
         &self,
         source_vertex_id: &ID,
         edge_template_id: &ID,
-        library: &mut Library<StoreT>,
+        context: &mut PluginContext<StoreT>,
         errors: &mut ErrorReceiverT,
     ) -> Result<Option<ID>, FloriaError>
     where
@@ -19,7 +19,7 @@ impl VertexSelector {
     {
         match self {
             Self::VertexID(id) => Ok(Some(id.clone())),
-            Self::Finder(vertex_finder) => vertex_finder.find(source_vertex_id, edge_template_id, library, errors),
+            Self::Finder(vertex_finder) => vertex_finder.find(source_vertex_id, edge_template_id, context, errors),
         }
     }
 }

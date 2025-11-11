@@ -12,41 +12,41 @@ pub type DispatchResult = Result<Option<Expression>, DispatchError>;
 
 type Static<StaticT> = LazyLock<Mutex<Option<StaticT>>>;
 
-type Dispatcher = fn(name: String, arguments: Vec<Expression>, call_site: CallSite) -> DispatchResult;
+type Dispatch = fn(name: String, arguments: Vec<Expression>, call_site: CallSite) -> DispatchResult;
 
-static DISPATCHER_PLUGIN: Static<(String, Dispatcher)> = Static::new(|| Default::default());
+static DISPATCH_PLUGIN: Static<(String, Dispatch)> = Static::new(|| Default::default());
 
-/// Register dispatcher plugin.
-pub fn register_dispatcher_plugin(name: String, dispatcher: Dispatcher) -> Result<(), DispatchError> {
-    *DISPATCHER_PLUGIN.lock().map_escape_depiction_error()? = Some((name, dispatcher));
+/// Register dispatch plugin ID.
+pub fn register_dispatch_plugin(id: String, dispatcher: Dispatch) -> Result<(), DispatchError> {
+    *DISPATCH_PLUGIN.lock().map_escape_depiction_error()? = Some((id, dispatcher));
     Ok(())
 }
 
-/// Get registered dispatcher plugin.
-pub fn registered_dispatcher_plugin() -> Result<(String, Dispatcher), DispatchError> {
-    match DISPATCHER_PLUGIN.lock().map_escape_depiction_error()?.clone() {
-        Some(plugin) => Ok(plugin),
-        None => Err("plugin not registered".into()),
+/// Get registered dispatch plugin ID.
+pub fn registered_dispatch_plugin() -> Result<(String, Dispatch), DispatchError> {
+    match DISPATCH_PLUGIN.lock().map_escape_depiction_error()?.clone() {
+        Some(id) => Ok(id),
+        None => Err("dispatch plugin not registered".into()),
     }
 }
 
 /// Implement dispatcher plugin.
 #[macro_export]
-macro_rules! impl_dispatcher {
-    ( $plugin_name:expr, $arguments:ident, $call_site:ident, { $( $match:tt )* } ) => {
-        /// Dispatcher.
-        pub struct Dispatcher;
+macro_rules! impl_dispatch {
+    ( $arguments:ident, $call_site:ident, { $( $match:tt )* } ) => {
+        /// Dispatch.
+        pub struct Dispatch;
 
-        $crate::export_dispatcher!(Dispatcher);
+        $crate::export_dispatch!(Dispatch);
 
-        impl $crate::dispatch_bindings::Guest for Dispatcher {
+        impl $crate::dispatch_bindings::Guest for Dispatch {
             type ListResource = $crate::data::List;
             type MapResource = $crate::data::Map;
             type CustomResource = $crate::data::Custom;
             type CallResource = $crate::data::Call;
 
-            fn initialize() -> ::std::result::Result<(), $crate::DispatchError> {
-                $crate::register_dispatcher_plugin($plugin_name.into(), Self::dispatch)
+            fn initialize(id: String) -> ::std::result::Result<(), $crate::DispatchError> {
+                $crate::register_dispatch_plugin(id, Self::dispatch)
             }
 
             fn dispatch(
@@ -64,4 +64,4 @@ macro_rules! impl_dispatcher {
 }
 
 #[allow(unused_imports)]
-pub use impl_dispatcher;
+pub use impl_dispatch;
