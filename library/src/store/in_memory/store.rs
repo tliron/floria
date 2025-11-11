@@ -8,7 +8,7 @@ use super::{
     backend::*,
 };
 
-use std::sync::*;
+use {kutil::std::immutable::*, std::sync::*};
 
 //
 // InMemoryStore
@@ -32,6 +32,24 @@ impl Store for InMemoryStore {
     fn create_id(&self, id: &mut ID) -> Result<(), StoreError> {
         let next_id = self.backend.get_next_id(id.kind.clone());
         id.name = next_id.to_string().into();
+        Ok(())
+    }
+
+    fn get_plugin(&self, id: &ID) -> Result<Option<Plugin>, StoreError> {
+        Ok(self.backend.plugins.pin().get(id).cloned())
+    }
+
+    fn get_plugin_by_url(&self, url: &ByteString) -> Result<Option<Plugin>, StoreError> {
+        for plugin in self.backend.plugins.pin().values() {
+            if plugin.url == url {
+                return Ok(Some(plugin.clone()));
+            }
+        }
+        Ok(None)
+    }
+
+    fn add_plugin(&self, plugin: Plugin) -> Result<(), StoreError> {
+        self.backend.plugins.pin().insert(plugin.id.clone(), plugin);
         Ok(())
     }
 

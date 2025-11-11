@@ -11,7 +11,7 @@ impl Property {
         &mut self,
         id: &ID,
         property_name: &str,
-        library: &mut Library<StoreT>,
+        context: &mut PluginContext<StoreT>,
         errors: &mut ErrorReceiverT,
     ) -> Result<bool, FloriaError>
     where
@@ -24,7 +24,7 @@ impl Property {
 
         if let Some(preparer) = &self.preparer {
             let call_site = CallSite::new(id.clone(), Some(property_name.into()));
-            if let Some(expression) = preparer.clone().evaluate(&call_site, library, errors)? {
+            if let Some(expression) = preparer.clone().evaluate(&call_site, context, errors)? {
                 self.value = Some(expression.into());
             }
             return Ok(true);
@@ -38,7 +38,7 @@ impl Property {
         &mut self,
         id: &ID,
         property_name: &str,
-        library: &mut Library<StoreT>,
+        context: &mut PluginContext<StoreT>,
         errors: &mut ErrorReceiverT,
     ) -> Result<bool, FloriaError>
     where
@@ -52,7 +52,7 @@ impl Property {
 
         if let Some(updater) = &self.updater {
             let call_site = CallSite::new(id.clone(), Some(property_name.into()));
-            if let Some(expression) = updater.clone().evaluate(&call_site, library, errors)? {
+            if let Some(expression) = updater.clone().evaluate(&call_site, context, errors)? {
                 self.value = Some(expression.into());
             }
             return Ok(true);

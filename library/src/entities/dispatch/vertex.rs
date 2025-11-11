@@ -7,31 +7,27 @@ use super::super::{
 use kutil::std::error::*;
 
 impl Vertex {
-    /// Update properties.
-    pub fn update_properties<StoreT, ErrorReceiverT>(
+    /// Handle event.
+    pub fn handle_event<StoreT, ErrorReceiverT>(
         &mut self,
+        event: &str,
+        arguments: &Vec<Expression>,
         propagation: &mut Propagation,
-        library: &mut Library<StoreT>,
+        context: &mut PluginContext<StoreT>,
         errors: &mut ErrorReceiverT,
     ) -> Result<(), FloriaError>
     where
         StoreT: Clone + Send + Store,
         ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
-        if self.instance.update_properties(library, errors)? {
-            library.store.add_vertex(self.clone())?;
-        }
-
-        if self.instance.prepare_properties(library, errors)? {
-            library.store.add_vertex(self.clone())?;
-        }
+        self.instance.handle_event(event, arguments.clone(), context, errors)?;
 
         if propagation.containing_vertex
             && let Some(containing_vertex_id) = &self.containing_vertex_id
         {
             if propagation.should(containing_vertex_id) {
-                if let Some(mut containing_vertex) = library.store.get_vertex(containing_vertex_id)? {
-                    containing_vertex.update_properties(propagation, library, errors)?;
+                if let Some(mut containing_vertex) = context.store.get_vertex(containing_vertex_id)? {
+                    containing_vertex.handle_event(event, arguments, propagation, context, errors)?;
                 }
             }
         }
@@ -39,8 +35,8 @@ impl Vertex {
         if propagation.contained_vertexes {
             for contained_vertex_id in &self.contained_vertex_ids {
                 if propagation.should(contained_vertex_id) {
-                    if let Some(mut contained_vertex) = library.store.get_vertex(contained_vertex_id)? {
-                        contained_vertex.update_properties(propagation, library, errors)?;
+                    if let Some(mut contained_vertex) = context.store.get_vertex(contained_vertex_id)? {
+                        contained_vertex.handle_event(event, arguments, propagation, context, errors)?;
                     }
                 }
             }
@@ -49,8 +45,8 @@ impl Vertex {
         if propagation.incoming_edges {
             for incoming_edge_id in &self.incoming_edge_ids {
                 if propagation.should(incoming_edge_id) {
-                    if let Some(mut incoming_edge) = library.store.get_edge(incoming_edge_id)? {
-                        incoming_edge.update_properties(propagation, library, errors)?;
+                    if let Some(mut incoming_edge) = context.store.get_edge(incoming_edge_id)? {
+                        incoming_edge.handle_event(event, arguments, propagation, context, errors)?;
                     }
                 }
             }
@@ -59,8 +55,70 @@ impl Vertex {
         if propagation.outgoing_edges {
             for outgoing_edge_id in &self.outgoing_edge_ids {
                 if propagation.should(outgoing_edge_id) {
-                    if let Some(mut outgoing_edge) = library.store.get_edge(outgoing_edge_id)? {
-                        outgoing_edge.update_properties(propagation, library, errors)?;
+                    if let Some(mut outgoing_edge) = context.store.get_edge(outgoing_edge_id)? {
+                        outgoing_edge.handle_event(event, arguments, propagation, context, errors)?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Update properties.
+    pub fn update_properties<StoreT, ErrorReceiverT>(
+        &mut self,
+        propagation: &mut Propagation,
+        context: &mut PluginContext<StoreT>,
+        errors: &mut ErrorReceiverT,
+    ) -> Result<(), FloriaError>
+    where
+        StoreT: Clone + Send + Store,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
+    {
+        if self.instance.update_properties(context, errors)? {
+            context.store.add_vertex(self.clone())?;
+        }
+
+        if self.instance.prepare_properties(context, errors)? {
+            context.store.add_vertex(self.clone())?;
+        }
+
+        if propagation.containing_vertex
+            && let Some(containing_vertex_id) = &self.containing_vertex_id
+        {
+            if propagation.should(containing_vertex_id) {
+                if let Some(mut containing_vertex) = context.store.get_vertex(containing_vertex_id)? {
+                    containing_vertex.update_properties(propagation, context, errors)?;
+                }
+            }
+        }
+
+        if propagation.contained_vertexes {
+            for contained_vertex_id in &self.contained_vertex_ids {
+                if propagation.should(contained_vertex_id) {
+                    if let Some(mut contained_vertex) = context.store.get_vertex(contained_vertex_id)? {
+                        contained_vertex.update_properties(propagation, context, errors)?;
+                    }
+                }
+            }
+        }
+
+        if propagation.incoming_edges {
+            for incoming_edge_id in &self.incoming_edge_ids {
+                if propagation.should(incoming_edge_id) {
+                    if let Some(mut incoming_edge) = context.store.get_edge(incoming_edge_id)? {
+                        incoming_edge.update_properties(propagation, context, errors)?;
+                    }
+                }
+            }
+        }
+
+        if propagation.outgoing_edges {
+            for outgoing_edge_id in &self.outgoing_edge_ids {
+                if propagation.should(outgoing_edge_id) {
+                    if let Some(mut outgoing_edge) = context.store.get_edge(outgoing_edge_id)? {
+                        outgoing_edge.update_properties(propagation, context, errors)?;
                     }
                 }
             }
@@ -73,7 +131,7 @@ impl Vertex {
     pub fn instantiate_edges<StoreT, ErrorReceiverT>(
         &self,
         directory: &Directory,
-        library: &mut Library<StoreT>,
+        context: &mut PluginContext<StoreT>,
         errors: &mut ErrorReceiverT,
     ) -> Result<(), FloriaError>
     where
@@ -81,9 +139,9 @@ impl Vertex {
         ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
         for contained_vertex_id in &self.contained_vertex_ids {
-            match library.store.get_vertex(contained_vertex_id)? {
+            match context.store.get_vertex(contained_vertex_id)? {
                 Some(contained_vertex) => {
-                    contained_vertex.instantiate_edges(directory, library, errors)?;
+                    contained_vertex.instantiate_edges(directory, context, errors)?;
                 }
 
                 None => tracing::warn!("vertex not found: {}", contained_vertex_id),
@@ -93,15 +151,15 @@ impl Vertex {
         let mut vertex = self.clone();
 
         match &vertex.instance.origin_template_id {
-            Some(origin_template_id) => match library.store.get_vertex_template(origin_template_id)? {
+            Some(origin_template_id) => match context.store.get_vertex_template(origin_template_id)? {
                 Some(vertex_template) => {
                     for outgoing_edge_template_id in &vertex_template.outgoing_edge_template_ids {
-                        match library.store.get_edge_template(outgoing_edge_template_id)? {
+                        match context.store.get_edge_template(outgoing_edge_template_id)? {
                             Some(outgoing_edge_template) => {
                                 match outgoing_edge_template.target_selector.select(
                                     &vertex.instance.id,
                                     outgoing_edge_template_id,
-                                    library,
+                                    context,
                                     errors,
                                 )? {
                                     Some(target_vertex_id) => {
@@ -109,7 +167,7 @@ impl Vertex {
                                             directory,
                                             vertex.instance.id.clone(),
                                             target_vertex_id,
-                                            &library.store,
+                                            context.store.clone(),
                                         )?;
 
                                         vertex.outgoing_edge_ids.push(outgoing_edge_id);
@@ -134,7 +192,7 @@ impl Vertex {
             None => {}
         }
 
-        library.store.add_vertex(vertex)?;
+        context.store.add_vertex(vertex)?;
 
         Ok(())
     }

@@ -1,7 +1,7 @@
 use super::super::{
     super::{
         super::{
-            super::{data::*, store::*},
+            super::{data::*, errors::*, store::*},
             bindings::floria::plugins::floria as bindings,
             errors::*,
         },
@@ -65,8 +65,8 @@ where
                 }
 
                 let resource = self.resources.push(BindingsCall::new(
-                    call.plugin.into(),
-                    call.function.into(),
+                    call.function.plugin_id.to_string().into(),
+                    call.function.name.into(),
                     arguments,
                     call.kind.into(),
                 ))?;
@@ -77,7 +77,7 @@ where
     }
 
     /// Convert an expression from bindings.
-    pub fn expression_from_bindings(&mut self, expression: bindings::Expression) -> Result<Expression, PluginError> {
+    pub fn expression_from_bindings(&mut self, expression: bindings::Expression) -> Result<Expression, FloriaError> {
         match expression {
             bindings::Expression::Null => Ok(Expression::Null),
             bindings::Expression::Integer(integer) => Ok(Expression::Integer(integer)),
@@ -120,7 +120,7 @@ where
 
             bindings::Expression::Call(resource) => {
                 let call = self.resources.get(&resource).map_err(PluginError::WasmResource)?;
-                let plugin = call.plugin.clone().into();
+                let plugin = ID::parse(EntityKind::Plugin, &call.plugin)?;
                 let function = call.function.clone().into();
                 let arguments = call.arguments.clone();
                 let kind = call.kind.into();
@@ -130,7 +130,7 @@ where
                     expression_arguments.push(self.expression_from_bindings(argument)?);
                 }
 
-                Ok(Call::new(plugin, function, expression_arguments, kind).into())
+                Ok(Call::new(plugin, function, expression_arguments, kind)?.into())
             }
         }
     }

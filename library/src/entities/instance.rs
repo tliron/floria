@@ -2,6 +2,7 @@ use super::{
     super::{data::*, store::*},
     class::*,
     property::*,
+    template::*,
 };
 
 use {kutil::std::immutable::*, std::collections::*};
@@ -27,34 +28,51 @@ pub struct Instance {
 
     /// Properties.
     pub properties: BTreeMap<ByteString, Property>,
+
+    /// Event handlers.
+    pub event_handlers: BTreeMap<ByteString, FunctionName>,
 }
 
 impl Instance {
     /// Constructor.
-    pub fn new_for(kind: EntityKind, directory: Directory, id: ByteString, origin_template_id: Option<ID>) -> Self {
-        Self::new_with(ID::new_for(kind, directory, id), origin_template_id)
-    }
-
-    /// Constructor.
-    pub fn new_with(id: ID, origin_template_id: Option<ID>) -> Self {
+    pub fn new(id: ID, origin_template_id: Option<ID>) -> Self {
         Self {
             id,
             origin_template_id,
             metadata: Default::default(),
             class_ids: Default::default(),
             properties: Default::default(),
+            event_handlers: Default::default(),
         }
     }
 
+    /// Constructor.
+    pub fn new_from_template<StoreT>(
+        template: &Template,
+        kind: EntityKind,
+        directory: &Directory,
+        store: StoreT,
+    ) -> Result<Self, StoreError>
+    where
+        StoreT: Store,
+    {
+        let id = ID::new(kind, directory.clone(), store)?;
+        let mut instance = Self::new(id, Some(template.id.clone()));
+        instance.metadata = template.metadata.clone();
+        instance.class_ids = template.class_ids.clone();
+        instance.properties = template.property_templates.clone();
+        Ok(instance)
+    }
+
     /// Into expression.
-    pub fn into_expression<'own, StoreT>(
+    pub fn into_expression<StoreT>(
         self,
         map: &mut BTreeMap<Expression, Expression>,
         embedded: bool,
-        store: &'own StoreT,
+        store: StoreT,
     ) -> Result<(), StoreError>
     where
-        StoreT: Store,
+        StoreT: Clone + Store,
     {
         map.insert("kind".into(), self.id.kind.as_str().into());
         map.insert("id".into(), self.id.to_string().into());
@@ -64,7 +82,7 @@ impl Instance {
         }
 
         map.insert("metadata".into(), metadata_into_expression(self.metadata));
-        classes_into_expression(store, map, embedded, self.class_ids)?;
+        classes_into_expression(store.clone(), map, embedded, self.class_ids)?;
         properties_into_expression(store, map, "properties", embedded, self.properties)?;
 
         Ok(())

@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     template::*,
     utils::*,
 };
@@ -32,22 +32,7 @@ pub struct VertexTemplate {
 
 impl VertexTemplate {
     /// Constructor.
-    pub fn new<StoreT>(directory: Directory, store: &StoreT) -> Result<Self, StoreError>
-    where
-        StoreT: Store,
-    {
-        let mut id = ID::new(EntityKind::VertexTemplate, directory);
-        store.create_id(&mut id)?;
-        Ok(Self::new_with(id, None))
-    }
-
-    /// Constructor.
-    pub fn new_for(directory: Directory, id: ByteString, containing_vertex_template_id: Option<ID>) -> Self {
-        Self::new_with(ID::new_for(EntityKind::VertexTemplate, directory, id), containing_vertex_template_id)
-    }
-
-    /// Constructor.
-    pub fn new_with(id: ID, containing_vertex_template_id: Option<ID>) -> Self {
+    pub fn new(id: ID, containing_vertex_template_id: Option<ID>) -> Self {
         Self {
             template: Template::new(id),
             containing_vertex_template_id,
@@ -56,14 +41,33 @@ impl VertexTemplate {
         }
     }
 
-    /// Into expression.
-    pub fn into_expression<'own, StoreT>(self, embedded: bool, store: &'own StoreT) -> Result<Expression, StoreError>
+    /// Constructor.
+    pub fn new_with_name(
+        directory: Directory,
+        name: ByteString,
+        containing_vertex_template_id: Option<ID>,
+    ) -> Result<Self, MalformedError> {
+        let id = ID::new_with_name(EntityKind::VertexTemplate, directory, name)?;
+        Ok(Self::new(id, containing_vertex_template_id))
+    }
+
+    /// Constructor.
+    pub fn new_create_id<StoreT>(directory: Directory, store: StoreT) -> Result<Self, StoreError>
     where
         StoreT: Store,
     {
+        let id = ID::new(EntityKind::VertexTemplate, directory, store)?;
+        Ok(Self::new(id, None))
+    }
+
+    /// Into expression.
+    pub fn into_expression<StoreT>(self, embedded: bool, store: StoreT) -> Result<Expression, StoreError>
+    where
+        StoreT: Clone + Store,
+    {
         let mut map = BTreeMap::default();
 
-        self.template.into_expression(&mut map, embedded, store)?;
+        self.template.into_expression(&mut map, embedded, store.clone())?;
 
         if !embedded {
             if let Some(containing_vertex_template_id) = &self.containing_vertex_template_id {
@@ -77,7 +81,7 @@ impl VertexTemplate {
                 for contained_vertex_template_id in &self.contained_vertex_template_ids {
                     match store.get_vertex_template(contained_vertex_template_id)? {
                         Some(vertex_template) => {
-                            contained_vertex_templates.push(vertex_template.into_expression(embedded, store)?)
+                            contained_vertex_templates.push(vertex_template.into_expression(embedded, store.clone())?)
                         }
                         None => {}
                     }
@@ -98,7 +102,7 @@ impl VertexTemplate {
                 for outgoing_edge_template_id in &self.outgoing_edge_template_ids {
                     match store.get_edge_template(outgoing_edge_template_id)? {
                         Some(edge_template) => {
-                            outgoing_edge_templates.push(edge_template.into_expression(embedded, store)?)
+                            outgoing_edge_templates.push(edge_template.into_expression(embedded, store.clone())?)
                         }
                         None => {}
                     }

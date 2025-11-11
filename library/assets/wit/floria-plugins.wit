@@ -18,6 +18,7 @@ interface floria {
     // Entities
 
     variant entity-kind {
+        plugin,
         class,
         vertex-template,
         edge-template,
@@ -115,7 +116,7 @@ interface floria {
 }
 
 interface dispatch {
-    initialize: func() -> result<_, string>;
+    initialize: func(id: string) -> result<_, string>;
     dispatch: func(name: string, arguments: list<expression>, call-site: call-site) -> result<option<expression>, string>;
 
     record call-site {
@@ -126,6 +127,7 @@ interface dispatch {
     // Entities
 
     variant entity-kind {
+        plugin,
         class,
         vertex-template,
         edge-template,

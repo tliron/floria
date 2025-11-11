@@ -1,8 +1,6 @@
 use super::{
     super::{data::*, store::*},
     class::*,
-    event_handler::*,
-    instance::*,
     property::*,
 };
 
@@ -28,7 +26,7 @@ pub struct Template {
     pub property_templates: BTreeMap<ByteString, Property>,
 
     /// Event handlers.
-    pub event_handlers: Vec<EventHandler>,
+    pub event_handlers: BTreeMap<ByteString, FunctionName>,
 }
 
 impl Template {
@@ -44,42 +42,21 @@ impl Template {
     }
 
     /// Into expression.
-    pub fn into_expression<'own, StoreT>(
+    pub fn into_expression<StoreT>(
         self,
         map: &mut BTreeMap<Expression, Expression>,
         embedded: bool,
-        store: &'own StoreT,
+        store: StoreT,
     ) -> Result<(), StoreError>
     where
-        StoreT: Store,
+        StoreT: Clone + Store,
     {
         map.insert("kind".into(), self.id.kind.as_str().into());
         map.insert("id".into(), self.id.to_string().into());
         map.insert("metadata".into(), metadata_into_expression(self.metadata));
-        classes_into_expression(store, map, embedded, self.class_ids)?;
+        classes_into_expression(store.clone(), map, embedded, self.class_ids)?;
         properties_into_expression(store, map, "property-templates", embedded, self.property_templates)?;
 
         Ok(())
-    }
-
-    /// Instantiate.
-    pub fn instantiate<StoreT>(
-        &self,
-        kind: EntityKind,
-        directory: &Directory,
-        store: &StoreT,
-    ) -> Result<Instance, StoreError>
-    where
-        StoreT: Store,
-    {
-        let mut id = ID::new(kind, directory.clone());
-        store.create_id(&mut id)?;
-
-        let mut instance = Instance::new_with(id, Some(self.id.clone()));
-        instance.metadata = self.metadata.clone();
-        instance.class_ids = self.class_ids.clone();
-        instance.properties = self.property_templates.clone();
-
-        Ok(instance)
     }
 }

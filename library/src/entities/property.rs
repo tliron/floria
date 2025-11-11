@@ -50,7 +50,7 @@ impl Property {
     }
 
     /// Into expression.
-    pub fn into_expression<'own, StoreT>(self, embedded: bool, store: &'own StoreT) -> Result<Expression, StoreError>
+    pub fn into_expression<StoreT>(self, embedded: bool, store: StoreT) -> Result<Expression, StoreError>
     where
         StoreT: Store,
     {
@@ -148,14 +148,14 @@ where
 
 /// Properties into expression.
 pub fn properties_into_expression<StoreT>(
-    store: &StoreT,
+    store: StoreT,
     map: &mut BTreeMap<Expression, Expression>,
     key: &'static str,
     embedded: bool,
     properties: BTreeMap<ByteString, Property>,
 ) -> Result<(), StoreError>
 where
-    StoreT: Store,
+    StoreT: Clone + Store,
 {
     if properties.is_empty() {
         return Ok(());
@@ -163,7 +163,7 @@ where
 
     let mut expressions = BTreeMap::default();
     for (property_name, property) in properties {
-        expressions.insert(property_name.into(), property.into_expression(embedded, store)?);
+        expressions.insert(property_name.into(), property.into_expression(embedded, store.clone())?);
     }
 
     map.insert(key.into(), expressions.into());

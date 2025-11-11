@@ -1,6 +1,6 @@
 use super::{
     super::{data::*, store::*},
-    invalid_value::*,
+    malformed::*,
 };
 
 use {
@@ -21,11 +21,6 @@ pub enum FloriaError {
     #[error("instantiation: {0}")]
     Instantiation(String),
 
-    /// Invalid value.
-    #[error("invalid value: {0}")]
-    #[depict(as(depict))]
-    InvalidValue(#[from] InvalidValueError),
-
     /// Store.
     #[error("store: {0}")]
     #[depict(as(depict))]
@@ -36,22 +31,35 @@ pub enum FloriaError {
     #[error("plugin: {0}")]
     #[depict(as(depict))]
     Plugin(#[from] super::super::plugins::PluginError),
+
+    /// Malformed.
+    #[error("malformed: {0}")]
+    Malformed(#[from] MalformedError),
 }
 
 impl FloriaError {
     /// ID.
-    pub fn id(&self) -> Option<ID> {
-        match self {
-            Self::Instantiation(_) | Self::Store(_) => None,
-
-            Self::InvalidValue(invalid_value) => Some(invalid_value.id.clone()),
-
+    pub fn id(&self) -> Result<Option<ID>, FloriaError> {
+        Ok(match self {
+            // Self::InvalidValue(invalid_value) => Some(invalid_value.id.clone()),
             #[cfg(feature = "plugins")]
             Self::Plugin(plugin) => match plugin {
-                super::super::plugins::PluginError::Dispatch(dispatch) => Some(dispatch.id()),
+                super::super::plugins::PluginError::Dispatch(dispatch) => Some(dispatch.id()?),
 
                 _ => None,
             },
+
+            _ => None,
+        })
+    }
+}
+
+impl IntoDepictionMarkup for FloriaError {
+    fn into_depiction_markup(self) -> String {
+        match self {
+            #[cfg(feature = "plugins")]
+            Self::Plugin(error) => error.into_depiction_markup(),
+            _ => escape_depiction_markup(self),
         }
     }
 }
@@ -91,7 +99,7 @@ impl<'own> Depict for DepictFloriaErrors<'own> {
 
         let mut table = FastHashMap::<_, Vec<_>>::default();
         for error in self.errors {
-            let id = error.id();
+            let id = error.id().map_err(io::Error::other)?;
 
             match table.get_mut(&id) {
                 Some(list) => list.push(error),

@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     utils::*,
 };
 
@@ -25,13 +25,14 @@ pub struct Class {
 
 impl Class {
     /// Constructor.
-    pub fn new_for(directory: Directory, id: ByteString) -> Self {
-        Self::new_with(ID::new_for(EntityKind::Class, directory, id))
+    pub fn new(id: ID) -> Self {
+        Self { id, metadata: Default::default() }
     }
 
     /// Constructor.
-    pub fn new_with(id: ID) -> Self {
-        Self { id, metadata: Default::default() }
+    pub fn new_with_name(directory: Directory, name: ByteString) -> Result<Self, MalformedError> {
+        let id = ID::new_with_name(EntityKind::Class, directory, name)?;
+        Ok(Self::new(id))
     }
 
     /// To [Depict].
@@ -67,8 +68,7 @@ where
     {
         context.theme.write_heading(writer, "Class")?;
         depict_id("id", Some(&self.class.id), false, writer, context)?;
-        depict_metadata(&self.class.metadata, true, writer, context)?;
-        Ok(())
+        depict_metadata(&self.class.metadata, true, writer, context)
     }
 }
 
@@ -88,7 +88,7 @@ impl Into<Expression> for Class {
 
 /// Classes into expression.
 pub fn classes_into_expression<StoreT>(
-    store: &StoreT,
+    store: StoreT,
     map: &mut BTreeMap<Expression, Expression>,
     embedded: bool,
     class_ids: Vec<ID>,

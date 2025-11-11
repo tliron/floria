@@ -1,5 +1,6 @@
 use super::{
     super::{data::*, store::*},
+    edge_template::*,
     instance::*,
     utils::*,
 };
@@ -27,10 +28,28 @@ pub struct Edge {
 }
 
 impl Edge {
-    /// Into expression.
-    pub fn into_expression<'own, StoreT>(self, embedded: bool, store: &'own StoreT) -> Result<Expression, StoreError>
+    /// Constructor.
+    pub fn new_from_template<StoreT>(
+        directory: &Directory,
+        edge_template: &EdgeTemplate,
+        source_vertex_id: ID,
+        target_vertex_id: ID,
+        store: StoreT,
+    ) -> Result<Self, StoreError>
     where
-        StoreT: Store,
+        StoreT: Clone + Store,
+    {
+        Ok(Self {
+            instance: Instance::new_from_template(&edge_template.template, EntityKind::Edge, directory, store.clone())?,
+            source_vertex_id,
+            target_vertex_id,
+        })
+    }
+
+    /// Into expression.
+    pub fn into_expression<StoreT>(self, embedded: bool, store: StoreT) -> Result<Expression, StoreError>
+    where
+        StoreT: Clone + Store,
     {
         let mut map = BTreeMap::default();
 
