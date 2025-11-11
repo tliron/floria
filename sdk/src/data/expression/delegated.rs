@@ -9,25 +9,16 @@ impl PartialEq for Expression {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Null, Self::Null) => true,
-            (Self::Integer(integer), Self::Integer(other_integer)) => integer == other_integer,
-            (Self::UnsignedInteger(unsigned_integer), Self::UnsignedInteger(other_unsigned_integer)) => {
-                unsigned_integer == other_unsigned_integer
-            }
-            (Self::Float(float), Self::Float(other_float)) => float == other_float,
-            (Self::Boolean(boolean), Self::Boolean(other_boolean)) => boolean == other_boolean,
-            (Self::Text(text), Self::Text(other_text)) => text == other_text,
-            (Self::Blob(blob), Self::Blob(other_blob)) => blob == other_blob,
-            (Self::List(list_resource), Self::List(other_list_resource)) => {
-                list_resource.list() == other_list_resource.list()
-            }
-            (Self::Map(map_resource), Self::Map(other_map_resource)) => map_resource.map() == other_map_resource.map(),
-            (Self::Custom(custom_resource), Self::Custom(other_custom_resource)) => {
-                custom_resource.custom() == other_custom_resource.custom()
-            }
-            (Self::Call(call_resource), Self::Call(other_call_resource)) => {
-                call_resource.call() == other_call_resource.call()
-            }
-
+            (Self::Integer(left), Self::Integer(right)) => left == right,
+            (Self::UnsignedInteger(left), Self::UnsignedInteger(right)) => left == right,
+            (Self::Float(left), Self::Float(right)) => left == right,
+            (Self::Boolean(left), Self::Boolean(right)) => left == right,
+            (Self::Text(left), Self::Text(right)) => left == right,
+            (Self::Blob(left), Self::Blob(right)) => left == right,
+            (Self::List(left), Self::List(right)) => left.list() == right.list(),
+            (Self::Map(left), Self::Map(right)) => left.map() == right.map(),
+            (Self::Custom(left), Self::Custom(right)) => left.custom() == right.custom(),
+            (Self::Call(left), Self::Call(right)) => left.call() == right.call(),
             _ => false,
         }
     }
@@ -39,27 +30,16 @@ impl PartialOrd for Expression {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (Self::Null, Self::Null) => Some(Ordering::Equal),
-            (Self::Integer(integer), Self::Integer(other_integer)) => integer.partial_cmp(other_integer),
-            (Self::UnsignedInteger(unsigned_integer), Self::UnsignedInteger(other_unsigned_integer)) => {
-                unsigned_integer.partial_cmp(other_unsigned_integer)
-            }
-            (Self::Float(float), Self::Float(other_float)) => float.partial_cmp(other_float),
-            (Self::Boolean(boolean), Self::Boolean(other_boolean)) => boolean.partial_cmp(other_boolean),
-            (Self::Text(text), Self::Text(other_text)) => text.partial_cmp(other_text),
-            (Self::Blob(blob), Self::Blob(other_blob)) => blob.partial_cmp(other_blob),
-            (Self::List(list_resource), Self::List(other_list_resource)) => {
-                list_resource.list().partial_cmp(other_list_resource.list())
-            }
-            (Self::Map(map_resource), Self::Map(other_map_resource)) => {
-                map_resource.map().partial_cmp(other_map_resource.map())
-            }
-            (Self::Custom(custom_resource), Self::Custom(other_custom_resource)) => {
-                custom_resource.custom().partial_cmp(other_custom_resource.custom())
-            }
-            (Self::Call(call_resource), Self::Call(other_call_resource)) => {
-                call_resource.call().partial_cmp(other_call_resource.call())
-            }
-
+            (Self::Integer(left), Self::Integer(right)) => left.partial_cmp(right),
+            (Self::UnsignedInteger(left), Self::UnsignedInteger(right)) => left.partial_cmp(right),
+            (Self::Float(left), Self::Float(right)) => left.partial_cmp(right),
+            (Self::Boolean(left), Self::Boolean(right)) => left.partial_cmp(right),
+            (Self::Text(left), Self::Text(right)) => left.partial_cmp(right),
+            (Self::Blob(left), Self::Blob(right)) => left.partial_cmp(right),
+            (Self::List(left), Self::List(right)) => left.list().partial_cmp(right.list()),
+            (Self::Map(left), Self::Map(right)) => left.map().partial_cmp(right.map()),
+            (Self::Custom(left), Self::Custom(right)) => left.custom().partial_cmp(right.custom()),
+            (Self::Call(left), Self::Call(right)) => left.call().partial_cmp(right.call()),
             _ => None,
         }
     }
@@ -69,28 +49,16 @@ impl Ord for Expression {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Self::Null, Self::Null) => Ordering::Equal,
-            (Self::Integer(integer), Self::Integer(other_integer)) => integer.cmp(other_integer),
-            (Self::UnsignedInteger(unsigned_integer), Self::UnsignedInteger(other_unsigned_integer)) => {
-                unsigned_integer.cmp(other_unsigned_integer)
-            }
-            (Self::Float(float), Self::Float(other_float)) => {
-                OrderedFloat::from(*float).cmp(&OrderedFloat::from(*other_float))
-            }
-            (Self::Boolean(boolean), Self::Boolean(other_boolean)) => boolean.cmp(other_boolean),
-            (Self::Text(text), Self::Text(other_text)) => text.cmp(other_text),
-            (Self::Blob(blob), Self::Blob(other_blob)) => blob.cmp(other_blob),
-            (Self::List(list_resource), Self::List(other_list_resource)) => {
-                list_resource.list().cmp(other_list_resource.list())
-            }
-            (Self::Map(map_resource), Self::Map(other_map_resource)) => {
-                map_resource.map().cmp(other_map_resource.map())
-            }
-            (Self::Custom(custom_resource), Self::Custom(other_custom_resource)) => {
-                custom_resource.custom().cmp(other_custom_resource.custom())
-            }
-            (Self::Call(call_resource), Self::Call(other_call_resource)) => {
-                call_resource.call().cmp(other_call_resource.call())
-            }
+            (Self::Integer(left), Self::Integer(right)) => left.cmp(right),
+            (Self::UnsignedInteger(left), Self::UnsignedInteger(right)) => left.cmp(right),
+            (Self::Float(left), Self::Float(right)) => OrderedFloat::from(*left).cmp(&OrderedFloat::from(*right)),
+            (Self::Boolean(left), Self::Boolean(right)) => left.cmp(right),
+            (Self::Text(left), Self::Text(right)) => left.cmp(right),
+            (Self::Blob(left), Self::Blob(right)) => left.cmp(right),
+            (Self::List(left), Self::List(right)) => left.list().cmp(right.list()),
+            (Self::Map(left), Self::Map(right)) => left.map().cmp(right.map()),
+            (Self::Custom(left), Self::Custom(right)) => left.custom().cmp(right.custom()),
+            (Self::Call(left), Self::Call(right)) => left.call().cmp(right.call()),
 
             (Self::Null, _) => Ordering::Less,
 
@@ -235,7 +203,7 @@ impl Hash for Expression {
 impl fmt::Display for Expression {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Null => fmt::Display::fmt("null", formatter),
+            Self::Null => fmt::Display::fmt("Null", formatter),
             Self::Integer(integer) => fmt::Display::fmt(integer, formatter),
             Self::UnsignedInteger(unsigned_integer) => fmt::Display::fmt(unsigned_integer, formatter),
             Self::Float(float) => fmt::Display::fmt(float, formatter),

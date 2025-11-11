@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     edge::*,
     template::*,
     utils::*,
@@ -32,37 +32,33 @@ pub struct EdgeTemplate {
 
 impl EdgeTemplate {
     /// Constructor.
-    pub fn new<StoreT>(
+    pub fn new(id: ID, containing_source_vertex_template_id: ID, target_selector: VertexSelector) -> Self {
+        Self { template: Template::new(id), containing_source_vertex_template_id, target_selector }
+    }
+
+    /// Constructor.
+    pub fn new_with_name(
+        directory: Directory,
+        name: ByteString,
+        containing_source_vertex_template_id: ID,
+        target_selector: VertexSelector,
+    ) -> Result<Self, MalformedError> {
+        let id = ID::new_with_name(EntityKind::EdgeTemplate, directory, name)?;
+        Ok(Self::new(id, containing_source_vertex_template_id, target_selector))
+    }
+
+    /// Constructor.
+    pub fn new_create_id<StoreT>(
         directory: Directory,
         containing_source_vertex_template_id: ID,
         target_selector: VertexSelector,
-        store: &StoreT,
+        store: StoreT,
     ) -> Result<Self, StoreError>
     where
         StoreT: Store,
     {
-        let mut id = ID::new(EntityKind::EdgeTemplate, directory);
-        store.create_id(&mut id)?;
-        Ok(Self::new_with(id, containing_source_vertex_template_id, target_selector))
-    }
-
-    /// Constructor.
-    pub fn new_for(
-        directory: Directory,
-        id: ByteString,
-        containing_source_vertex_template_id: ID,
-        target_selector: VertexSelector,
-    ) -> Self {
-        Self::new_with(
-            ID::new_for(EntityKind::EdgeTemplate, directory, id),
-            containing_source_vertex_template_id,
-            target_selector,
-        )
-    }
-
-    /// Constructor.
-    pub fn new_with(id: ID, containing_source_vertex_template_id: ID, target_selector: VertexSelector) -> Self {
-        Self { template: Template::new(id), containing_source_vertex_template_id, target_selector }
+        let id = ID::new(EntityKind::EdgeTemplate, directory, store)?;
+        Ok(Self::new(id, containing_source_vertex_template_id, target_selector))
     }
 
     /// Instantiate.
@@ -71,27 +67,21 @@ impl EdgeTemplate {
         directory: &Directory,
         source_vertex_id: ID,
         target_vertex_id: ID,
-        store: &StoreT,
+        store: StoreT,
     ) -> Result<ID, StoreError>
     where
-        StoreT: Store,
+        StoreT: Clone + Store,
     {
-        let edge = Edge {
-            instance: self.template.instantiate(EntityKind::Edge, directory, store)?,
-            source_vertex_id,
-            target_vertex_id,
-        };
-
+        let edge = Edge::new_from_template(directory, self, source_vertex_id, target_vertex_id, store.clone())?;
         let edge_id = edge.instance.id.clone();
         store.add_edge(edge)?;
-
         Ok(edge_id)
     }
 
     /// Into expression.
-    pub fn into_expression<'own, StoreT>(self, embedded: bool, store: &'own StoreT) -> Result<Expression, StoreError>
+    pub fn into_expression<StoreT>(self, embedded: bool, store: StoreT) -> Result<Expression, StoreError>
     where
-        StoreT: Store,
+        StoreT: Clone + Store,
     {
         let mut map = BTreeMap::default();
 
@@ -107,8 +97,8 @@ impl EdgeTemplate {
         Ok(map.into())
     }
 
-    /// To [Depict].
-    pub fn to_depict<'own, StoreT>(&'own self, store: &'own StoreT) -> DepictEdgeTemplate<'own, StoreT>
+    /// As [Depict].
+    pub fn as_depict<'own, StoreT>(&'own self, store: &'own StoreT) -> DepictEdgeTemplate<'own, StoreT>
     where
         StoreT: Store,
     {
@@ -147,6 +137,14 @@ where
             "property_templates",
             &self.edge_template.template.property_templates,
             self.store,
+            false,
+            writer,
+            context,
+        )?;
+        depict_event_handlers("event_handlers", &self.edge_template.template.event_handlers, false, writer, context)?;
+        depict_event_handlers(
+            "instantiation_event_handlers",
+            &self.edge_template.template.instantiation_event_handlers,
             false,
             writer,
             context,

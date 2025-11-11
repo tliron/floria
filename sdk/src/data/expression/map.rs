@@ -56,7 +56,7 @@ impl GuestMapResource for Map {
         Self::from_iter(key_value_pairs)
     }
 
-    fn inner(&self) -> Vec<(Expression, Expression)> {
+    fn replica(&self) -> Vec<(Expression, Expression)> {
         self.inner.clone().into_iter().collect()
     }
 

@@ -30,24 +30,74 @@ duplicate = "2.0.1"
 kutil = { version = "=0.0.5", features = ["std", "fast_collections", "immutable"] }
 ordered-float = "5.1.0"
 thiserror = "2.0.17"
-tracing = "0.1.41"
+tracing = "0.1.43"
+
+# plugins
+read-url = { optional = true, version = "=0.0.10", features = ["blocking"] }
 # https://docs.rs/wasmtime/latest/wasmtime/index.html#crate-features
-wasmtime = { optional = true, version = "38.0.3", default-features = false, features = [
+wasmtime = { optional = true, version = "39.0.1", default-features = false, features = [
     "cranelift",
     "parallel-compilation",
     "pooling-allocator",
+    "gc-drc",
+    "cache",
 ] }
-wasmtime-wasi = { optional = true, version = "38.0.3", default-features = false, features = ["p2"] }
+wasmtime-wasi = { optional = true, version = "39.0.1", default-features = false, features = ["p2"] }
+
+# plugins-http
+http = { optional = true, version = "1.4.0" }
+http-body-util = { optional = true, version = "0.1.3" }
+hyper = { optional = true, version = "1.8.1" }
+rustls = { optional = true, version = "0.23.35" }
+rustls-pki-types = { optional = true, version = "1.13.1" }
+tokio = { optional = true, version = "1.48.0" }
+tokio-rustls = { optional = true, version = "0.26.4" }
+wasmtime-wasi-http = { optional = true, version = "39.0.1", default-features = false }
+wasmtime-wasi-tls = { optional = true, version = "39.0.1" }
 
 [features]
-plugins = ["dep:wasmtime", "dep:wasmtime-wasi"]
+plugins = [
+    "dep:wasmtime",
+    "dep:wasmtime-wasi",
+    "dep:read-url",
+]
+
+plugins-http = [
+    "plugins",
+    "dep:wasmtime-wasi-http",
+    "dep:hyper",
+    "dep:http",
+    "dep:http-body-util",
+    "dep:rustls",
+    "dep:rustls-pki-types",
+    "dep:tokio",
+    "dep:tokio-rustls",
+]
+plugins-tls = [
+    "plugins",
+    "dep:wasmtime-wasi-tls",
+]
+plugins-http-platform = [
+    "plugins-http",
+    "kutil/tls-platform",
+]
+plugins-http-self-contained = [
+    "plugins-http",
+    "kutil/tls-self-contained",
+]
+
 wasm-debug = [
+    "wasmtime/debug", # requires gc
     "wasmtime/demangle",
     "wasmtime/profiling",
     "wasmtime/coredump",
     "wasmtime/addr2line",
     "wasmtime/debug-builtins",
 ]
+
+## Don't manually enable this!
+## It's for situations where we have all features enabled
+_blanket = ["kutil/_blanket"]
 
 # https://stackoverflow.com/a/61417700
 [package.metadata.docs.rs]

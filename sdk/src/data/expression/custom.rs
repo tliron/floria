@@ -59,7 +59,7 @@ impl GuestCustomResource for Custom {
         Self { kind, inner }
     }
 
-    fn inner(&self) -> (String, Expression) {
+    fn replica(&self) -> (String, Expression) {
         (self.kind.clone(), self.inner.clone())
     }
 }

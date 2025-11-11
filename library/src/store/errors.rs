@@ -1,3 +1,5 @@
+use super::super::errors::*;
+
 use {
     depiction::*,
     std::{io, sync::*},
@@ -18,6 +20,10 @@ pub enum StoreError {
     /// Concurrency.
     #[error("concurrency: {0}")]
     Concurrency(String),
+
+    /// Malformed.
+    #[error("malformed: {0}")]
+    Malformed(#[from] MalformedError),
 }
 
 impl Depict for StoreError {
@@ -28,6 +34,7 @@ impl Depict for StoreError {
         match self {
             Self::ID(id) => write!(writer, "ID: {}", context.theme.error(id)),
             Self::Concurrency(concurrency) => write!(writer, "concurrency: {}", context.theme.error(concurrency)),
+            Self::Malformed(malformed) => write!(writer, "malformed: {}", context.theme.error(malformed)),
         }
     }
 }

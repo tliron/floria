@@ -11,8 +11,8 @@ impl floria_bindings::Property {
 }
 
 impl Metadata for floria_bindings::Property {
-    fn metadata(&self) -> Vec<(floria_bindings::Expression, floria_bindings::Expression)> {
-        self.metadata.inner()
+    fn metadata(&self) -> &floria_bindings::MapResource {
+        &self.metadata
     }
 
     fn class_ids(&self) -> &Vec<floria_bindings::Id> {

@@ -1,7 +1,11 @@
-use super::{super::dispatch::*, initialization::*};
+use super::{
+    super::{super::errors::*, dispatch::*},
+    initialization::*,
+};
 
 use {
     depiction::*,
+    read_url::*,
     std::{io, sync::*},
     thiserror::*,
     wasmtime::component::*,
@@ -39,6 +43,10 @@ pub enum PluginError {
     #[error("Wasm resource: {0}")]
     WasmResource(#[from] ResourceTableError),
 
+    /// URL.
+    #[error("URL: {0}")]
+    URL(#[from] UrlError),
+
     /// Initialization.
     #[error("initialization: {0}")]
     Initialization(#[from] InitializationError),
@@ -50,6 +58,23 @@ pub enum PluginError {
     /// Concurrency.
     #[error("concurrency: {0}")]
     Concurrency(String),
+
+    /// IO.
+    #[error("I/O: {0}")]
+    IO(#[from] io::Error),
+
+    /// Malformed.
+    #[error("malformed: {0}")]
+    Malformed(#[from] MalformedError),
+}
+
+impl IntoDepictionMarkup for PluginError {
+    fn into_depiction_markup(self) -> String {
+        match self {
+            Self::Dispatch(error) => error.into_depiction_markup(),
+            _ => escape_depiction_markup(self),
+        }
+    }
 }
 
 impl Depict for PluginError {

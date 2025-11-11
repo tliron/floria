@@ -84,7 +84,13 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .call_resource()
-                    .call_constructor(&mut self.host, &call.plugin, &call.function, &arguments, call.kind.into())
+                    .call_constructor(
+                        &mut self.host,
+                        &call.function.plugin_id.to_string(),
+                        &call.function.name,
+                        &arguments,
+                        call.kind.into(),
+                    )
                     .context("calling call constructor")
                     .map_err(PluginError::CallWasm)?;
 
@@ -111,13 +117,13 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .list_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling list inner")
+                    .call_replica(&mut self.host, resource)
+                    .context("calling List::replica")
                     .map_err(PluginError::CallWasm)?;
 
                 resource
                     .resource_drop(&mut self.host)
-                    .context("dropping list resource")
+                    .context("dropping List resource")
                     .map_err(PluginError::CallWasm)?;
 
                 let mut list = Vec::with_capacity(items.len());
@@ -133,13 +139,13 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .map_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling map inner")
+                    .call_replica(&mut self.host, resource)
+                    .context("calling Map::replica")
                     .map_err(PluginError::CallWasm)?;
 
                 resource
                     .resource_drop(&mut self.host)
-                    .context("dropping map resource")
+                    .context("dropping Map resource")
                     .map_err(PluginError::CallWasm)?;
 
                 let mut map = BTreeMap::default();
@@ -155,13 +161,13 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .custom_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling custom inner")
+                    .call_replica(&mut self.host, resource)
+                    .context("calling Custom::replica")
                     .map_err(PluginError::CallWasm)?;
 
                 resource
                     .resource_drop(&mut self.host)
-                    .context("dropping custom resource")
+                    .context("dropping Custom resource")
                     .map_err(PluginError::CallWasm)?;
 
                 let inner = self.expression_from_bindings(inner)?;
@@ -173,13 +179,13 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .call_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling call inner")
+                    .call_replica(&mut self.host, resource)
+                    .context("calling Call::replica")
                     .map_err(PluginError::CallWasm)?;
 
                 resource
                     .resource_drop(&mut self.host)
-                    .context("dropping call resource")
+                    .context("dropping Call resource")
                     .map_err(PluginError::CallWasm)?;
 
                 let mut expressions = Vec::with_capacity(arguments.len());
@@ -187,7 +193,8 @@ where
                     expressions.push(self.expression_from_bindings(argument)?);
                 }
 
-                Ok(Call::new(plugin.into(), function.into(), expressions, kind.into()).into())
+                Ok(Call::new(ID::parse(EntityKind::Plugin, &plugin)?, function.into(), expressions, kind.into())?
+                    .into())
             }
         }
     }

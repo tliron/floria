@@ -26,7 +26,8 @@ keywords = [
 duplicate = "2.0.1"
 num-traits = "0.2.19"
 ordered-float = "5.1.0"
-wit-bindgen = "0.47.0"
+waki = "0.5.1"
+wit-bindgen = "0.49.0"
 
 # https://stackoverflow.com/a/61417700
 [package.metadata.docs.rs]
