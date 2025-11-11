@@ -1,19 +1,22 @@
 use super::{
     super::{
-        super::{data::*, errors::*, store::*},
+        super::{data::*, store::*},
         bindings::floria::plugins::floria as bindings,
     },
     host::*,
 };
 
-use {depiction::*, kutil::std::error::*};
+use {
+    depiction::{markup::*, *},
+    problemo::{common::*, *},
+};
 
 impl<StoreT> bindings::Host for PluginHost<StoreT>
 where
     StoreT: Clone + Send + Store,
 {
     fn log(&mut self, source: String, message: String) -> wasmtime::Result<()> {
-        tracing::info!("[{}] {}: {}", self.name, source, message);
+        tracing::info!("[{}] {}: {}", self.id, source, message);
         Ok(())
     }
 
@@ -22,11 +25,15 @@ where
         expression: bindings::Expression,
         call_site: bindings::CallSite,
     ) -> wasmtime::Result<Result<Option<bindings::Expression>, String>> {
-        Ok(self._evaluate_expression(expression, call_site).map_err(|error| error.to_string()))
+        Ok(self._evaluate_expression(expression, call_site).into_depiction_markup())
     }
 
     fn get_entity(&mut self, id: bindings::Id) -> wasmtime::Result<Result<bindings::Entity, String>> {
-        Ok(self._get_entity(id).map_err(|error| error.to_string()))
+        Ok(self._get_entity(id).into_depiction_markup())
+    }
+
+    fn add_entity(&mut self, entity: bindings::Entity) -> wasmtime::Result<Result<(), String>> {
+        Ok(self._add_entity(entity).into_depiction_markup())
     }
 }
 
@@ -38,7 +45,7 @@ where
         &mut self,
         expression: bindings::Expression,
         call_site: bindings::CallSite,
-    ) -> Result<Option<bindings::Expression>, FloriaError> {
+    ) -> Result<Option<bindings::Expression>, Problem> {
         // TODO: also need to make sure we're not calling into same plugin
 
         let mut expression = self.expression_from_bindings(expression)?;
@@ -46,22 +53,22 @@ where
             call.kind = CallKind::Eager;
         }
 
-        Ok(match expression.evaluate(&call_site.into(), &mut self.library, &mut FailFastErrorReceiver)? {
+        Ok(match expression.evaluate(&call_site.try_into()?, &mut self.context, &mut FailFast)? {
             Some(expression) => Some(self.expression_to_bindings(expression)?),
             None => None,
         })
     }
 
-    fn _get_entity(&mut self, id: bindings::Id) -> Result<bindings::Entity, FloriaError> {
-        let id: ID = id.into();
+    fn _get_entity(&mut self, id: bindings::Id) -> Result<bindings::Entity, Problem> {
+        let id: ID = id.try_into()?;
 
         let entity: Option<bindings::Entity> = match id.kind {
-            EntityKind::Vertex => match self.library.store.get_vertex(&id)? {
+            EntityKind::Vertex => match self.context.store.get_vertex(&id)? {
                 Some(vertex) => Some(self.vertex_to_bindings(vertex)?.into()),
                 None => None,
             },
 
-            EntityKind::Edge => match self.library.store.get_edge(&id)? {
+            EntityKind::Edge => match self.context.store.get_edge(&id)? {
                 Some(edge) => Some(self.edge_to_bindings(edge)?.into()),
                 None => None,
             },
@@ -73,8 +80,19 @@ where
             Some(entity) => Ok(entity),
             None => {
                 // TODO: new error type
-                Err(FloriaError::Instantiation(format!("entity not found: |error|{}|", escape_depiction_markup(id))))
+                Err(format!("entity not found: |error|{}|", escape_depiction_markup(id)).gloss())
             }
+        }
+    }
+
+    fn _add_entity(&mut self, entity: bindings::Entity) -> Result<(), Problem> {
+        match entity {
+            bindings::Entity::Vertex(vertex) => {
+                let vertex = self.vertex_from_bindings(vertex)?;
+                Ok(self.context.store.add_vertex(vertex)?)
+            }
+
+            bindings::Entity::Edge(_edge) => todo!(),
         }
     }
 }

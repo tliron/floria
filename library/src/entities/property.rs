@@ -1,14 +1,18 @@
 use super::{
     super::{data::*, store::*},
     class::*,
-    utils::*,
+    *,
 };
 
 use {
     depiction::*,
     kutil::std::immutable::*,
+    problemo::*,
     std::{collections::*, io},
 };
+
+/// Properties.
+pub type Properties = BTreeMap<ByteString, Property>;
 
 //
 // Property
@@ -50,7 +54,7 @@ impl Property {
     }
 
     /// Into expression.
-    pub fn into_expression<'own, StoreT>(self, embedded: bool, store: &'own StoreT) -> Result<Expression, StoreError>
+    pub fn into_expression<StoreT>(self, embedded: bool, store: StoreT) -> Result<Expression, Problem>
     where
         StoreT: Store,
     {
@@ -76,9 +80,14 @@ impl Property {
         Ok(Expression::Map(map))
     }
 
-    /// To [Depict].
-    pub fn to_depict<'own, StoreT>(&'own self, store: &'own StoreT) -> DepictProperty<'own, StoreT>
+    /// As [Depict].
+    pub fn as_depict<'this, 'store, 'depict, StoreT>(
+        &'this self,
+        store: &'store StoreT,
+    ) -> DepictProperty<'depict, StoreT>
     where
+        'this: 'depict,
+        'store: 'depict,
         StoreT: Store,
     {
         DepictProperty { property: self, store }
@@ -90,15 +99,15 @@ impl Property {
 //
 
 /// Depict property.
-pub struct DepictProperty<'own, StoreT>
+pub struct DepictProperty<'inner, StoreT>
 where
     StoreT: Store,
 {
-    property: &'own Property,
-    store: &'own StoreT,
+    property: &'inner Property,
+    store: &'inner StoreT,
 }
 
-impl<'own, StoreT> Depict for DepictProperty<'own, StoreT>
+impl<'inner, StoreT> Depict for DepictProperty<'inner, StoreT>
 where
     StoreT: Store,
 {
@@ -113,12 +122,12 @@ where
         depict_metadata(&self.property.metadata, false, writer, context)?;
         depict_classes(&self.property.class_ids, self.store, writer, context)?;
 
-        utils::depict_field("read_only", false, writer, context, |writer, context| {
+        depict_field("read_only", false, writer, context, |writer, context| {
             context.separate(writer)?;
             context.theme.write_symbol(writer, self.property.read_only)
         })?;
 
-        utils::depict_field("preparer", false, writer, context, |writer, context| match &self.property.preparer {
+        depict_field("preparer", false, writer, context, |writer, context| match &self.property.preparer {
             Some(preparer) => preparer.depict(writer, context),
             None => {
                 context.separate(writer)?;
@@ -126,7 +135,7 @@ where
             }
         })?;
 
-        utils::depict_field("updater", false, writer, context, |writer, context| match &self.property.updater {
+        depict_field("updater", false, writer, context, |writer, context| match &self.property.updater {
             Some(updater) => updater.depict(writer, context),
             None => {
                 context.separate(writer)?;
@@ -134,7 +143,7 @@ where
             }
         })?;
 
-        utils::depict_field("value", true, writer, context, |writer, context| match &self.property.value {
+        depict_field("value", true, writer, context, |writer, context| match &self.property.value {
             Some(value) => value.depict(writer, context),
             None => {
                 context.separate(writer)?;
@@ -148,14 +157,14 @@ where
 
 /// Properties into expression.
 pub fn properties_into_expression<StoreT>(
-    store: &StoreT,
+    store: StoreT,
     map: &mut BTreeMap<Expression, Expression>,
     key: &'static str,
     embedded: bool,
-    properties: BTreeMap<ByteString, Property>,
-) -> Result<(), StoreError>
+    properties: Properties,
+) -> Result<(), Problem>
 where
-    StoreT: Store,
+    StoreT: Clone + Store,
 {
     if properties.is_empty() {
         return Ok(());
@@ -163,7 +172,7 @@ where
 
     let mut expressions = BTreeMap::default();
     for (property_name, property) in properties {
-        expressions.insert(property_name.into(), property.into_expression(embedded, store)?);
+        expressions.insert(property_name.into(), property.into_expression(embedded, store.clone())?);
     }
 
     map.insert(key.into(), expressions.into());

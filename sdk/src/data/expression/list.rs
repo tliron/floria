@@ -39,8 +39,8 @@ impl GuestListResource for List {
         Self::from(list)
     }
 
-    fn inner(&self) -> Vec<Expression> {
-        self.clone().inner
+    fn replica(&self) -> Vec<Expression> {
+        self.inner.clone()
     }
 
     fn length(&self) -> u64 {
@@ -64,7 +64,7 @@ impl FromIterator<Expression> for List {
 }
 
 impl fmt::Display for List {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_char('[')?;
 
         let mut iterator = self.inner.iter().peekable();

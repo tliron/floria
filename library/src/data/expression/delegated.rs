@@ -1,9 +1,56 @@
 use super::expression::*;
 
 use {
-    depiction::*,
+    depiction::{markup::*, *},
     std::{cmp::*, fmt, hash::*, io},
 };
+
+impl ToDepictionMarkup for Expression {
+    fn to_depiction_markup(&self) -> String {
+        match self {
+            Self::Undefined => "|symbol|Undefined|".into(),
+
+            Self::Null => "|symbol|Null|".into(),
+
+            Self::Integer(integer) => format!("|number|{:+}|", integer),
+
+            Self::UnsignedInteger(unsigned_integer) => format!("|number|{}|", unsigned_integer),
+
+            Self::Float(float) => format!("|number|{:?}|", float),
+
+            Self::Boolean(boolean) => format!("|symbol|{}|", boolean),
+
+            Self::Text(text) => format!("|string|{}|", escape_depiction_markup(format!("{:?}", text))),
+
+            Self::Blob(blob) => format!("|number|{}| bytes", blob.len()),
+
+            Self::List(list) => {
+                let items: Vec<String> = list.into_iter().map(|item| item.to_depiction_markup()).collect();
+                format!("|delimiter|[|{}|delimiter|]|", items.join("|delimiter|,|"))
+            }
+
+            Self::Map(map) => {
+                let items: Vec<String> = map
+                    .into_iter()
+                    .map(|(key, value)| {
+                        format!("{}|delimiter|:|{}", key.to_depiction_markup(), value.to_depiction_markup())
+                    })
+                    .collect();
+                format!("|delimiter|{{|{}|delimiter|}}|", items.join("|delimiter|,|"))
+            }
+
+            Self::Custom(kind, inner) => {
+                format!("|heading|Custom| |name|{}| {}", escape_depiction_markup(kind), inner.to_depiction_markup())
+            }
+
+            Self::Call(call) => call.to_depiction_markup(),
+        }
+    }
+
+    fn into_depiction_markup(self) -> String {
+        self.to_depiction_markup()
+    }
+}
 
 impl Depict for Expression {
     fn depict<WriteT>(&self, writer: &mut WriteT, context: &DepictionContext) -> io::Result<()>
@@ -63,9 +110,9 @@ impl Depict for Expression {
                 context.theme.write_symbol(writer, format!("{} bytes", blob.len()))
             }
 
-            Self::List(list) => utils::depict_list(list.iter(), None, writer, context),
+            Self::List(list) => depict_list(list, None, writer, context),
 
-            Self::Map(map) => utils::depict_map(map.iter(), None, writer, context),
+            Self::Map(map) => depict_map(map, None, writer, context),
 
             Self::Custom(kind, inner) => {
                 context.separate(writer)?;
@@ -75,13 +122,16 @@ impl Depict for Expression {
                 inner.depict(writer, context)
             }
 
-            Self::Call(call) => call.depict(writer, context),
+            Self::Call(call) => {
+                context.separate(writer)?;
+                call.depict(writer, &context.child().with_separator(false))
+            }
         }
     }
 }
 
 impl fmt::Display for Expression {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(
             &self
                 .to_depiction(&PLAIN_DEPICTION_CONTEXT.child().with_format(DepictionFormat::Compact))
@@ -95,21 +145,18 @@ impl PartialEq for Expression {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Undefined, Self::Undefined) | (Self::Null, Self::Null) => true,
-            (Self::Integer(integer), Self::Integer(other_integer)) => integer == other_integer,
-            (Self::UnsignedInteger(unsigned_integer), Self::UnsignedInteger(other_unsigned_integer)) => {
-                unsigned_integer == other_unsigned_integer
+            (Self::Integer(left), Self::Integer(right)) => left == right,
+            (Self::UnsignedInteger(left), Self::UnsignedInteger(right)) => left == right,
+            (Self::Float(left), Self::Float(right)) => left == right,
+            (Self::Boolean(left), Self::Boolean(right)) => left == right,
+            (Self::Text(left), Self::Text(right)) => left == right,
+            (Self::Blob(left), Self::Blob(right)) => left == right,
+            (Self::List(left), Self::List(right)) => left == right,
+            (Self::Map(left), Self::Map(right)) => left == right,
+            (Self::Custom(left_kind, left_properties), Self::Custom(right_kind, right_properties)) => {
+                (left_kind == right_kind) && (left_properties == right_properties)
             }
-            (Self::Float(float), Self::Float(other_float)) => float == other_float,
-            (Self::Boolean(boolean), Self::Boolean(other_boolean)) => boolean == other_boolean,
-            (Self::Text(text), Self::Text(other_text)) => text == other_text,
-            (Self::Blob(blob), Self::Blob(other_blob)) => blob == other_blob,
-            (Self::List(list), Self::List(other_list)) => list == other_list,
-            (Self::Map(map), Self::Map(other_map)) => map == other_map,
-            (Self::Custom(kind, properties), Self::Custom(other_kind, other_properties)) => {
-                (kind == other_kind) && (properties == other_properties)
-            }
-            (Self::Call(call), Self::Call(other_call)) => call == other_call,
-
+            (Self::Call(left), Self::Call(right)) => left == right,
             _ => false,
         }
     }
@@ -121,24 +168,21 @@ impl PartialOrd for Expression {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (Self::Undefined, Self::Undefined) | (Self::Null, Self::Null) => Some(Ordering::Equal),
-            (Self::Integer(integer), Self::Integer(other_integer)) => integer.partial_cmp(other_integer),
-            (Self::UnsignedInteger(unsigned_integer), Self::UnsignedInteger(other_unsigned_integer)) => {
-                unsigned_integer.partial_cmp(other_unsigned_integer)
-            }
-            (Self::Float(float), Self::Float(other_float)) => float.partial_cmp(other_float),
-            (Self::Boolean(boolean), Self::Boolean(other_boolean)) => boolean.partial_cmp(other_boolean),
-            (Self::Text(text), Self::Text(other_text)) => text.partial_cmp(other_text),
-            (Self::Blob(blob), Self::Blob(other_blob)) => blob.partial_cmp(other_blob),
-            (Self::List(list), Self::List(other_list)) => list.partial_cmp(other_list),
-            (Self::Map(map), Self::Map(other_map)) => map.partial_cmp(other_map),
-            (Self::Custom(kind, properties), Self::Custom(other_kind, other_properties)) => {
-                match kind.partial_cmp(other_kind) {
-                    Some(Ordering::Equal) => properties.partial_cmp(other_properties),
+            (Self::Integer(left), Self::Integer(right)) => left.partial_cmp(right),
+            (Self::UnsignedInteger(left), Self::UnsignedInteger(right)) => left.partial_cmp(right),
+            (Self::Float(left), Self::Float(right)) => left.partial_cmp(right),
+            (Self::Boolean(left), Self::Boolean(right)) => left.partial_cmp(right),
+            (Self::Text(left), Self::Text(right)) => left.partial_cmp(right),
+            (Self::Blob(left), Self::Blob(right)) => left.partial_cmp(right),
+            (Self::List(left), Self::List(right)) => left.partial_cmp(right),
+            (Self::Map(left), Self::Map(right)) => left.partial_cmp(right),
+            (Self::Custom(left_kind, left_properties), Self::Custom(right_kind, right_properties)) => {
+                match left_kind.partial_cmp(right_kind) {
+                    Some(Ordering::Equal) => left_properties.partial_cmp(right_properties),
                     ordering => ordering,
                 }
             }
-            (Self::Call(call), Self::Call(other_call)) => call.partial_cmp(other_call),
-
+            (Self::Call(left), Self::Call(right)) => left.partial_cmp(right),
             _ => None,
         }
     }
@@ -148,23 +192,21 @@ impl Ord for Expression {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Self::Undefined, Self::Undefined) | (Self::Null, Self::Null) => Ordering::Equal,
-            (Self::Integer(integer), Self::Integer(other_integer)) => integer.cmp(other_integer),
-            (Self::UnsignedInteger(unsigned_integer), Self::UnsignedInteger(other_unsigned_integer)) => {
-                unsigned_integer.cmp(other_unsigned_integer)
-            }
-            (Self::Float(float), Self::Float(other_float)) => float.cmp(other_float),
-            (Self::Boolean(boolean), Self::Boolean(other_boolean)) => boolean.cmp(other_boolean),
-            (Self::Text(text), Self::Text(other_text)) => text.cmp(other_text),
-            (Self::Blob(blob), Self::Blob(other_blob)) => blob.cmp(other_blob),
-            (Self::List(list), Self::List(other_list)) => list.cmp(other_list),
-            (Self::Map(map), Self::Map(other_map)) => map.cmp(other_map),
-            (Self::Custom(kind, properties), Self::Custom(other_kind, other_properties)) => {
-                match kind.cmp(other_kind) {
-                    Ordering::Equal => properties.cmp(other_properties),
+            (Self::Integer(left), Self::Integer(right)) => left.cmp(right),
+            (Self::UnsignedInteger(left), Self::UnsignedInteger(right)) => left.cmp(right),
+            (Self::Float(left), Self::Float(right)) => left.cmp(right),
+            (Self::Boolean(left), Self::Boolean(right)) => left.cmp(right),
+            (Self::Text(left), Self::Text(right)) => left.cmp(right),
+            (Self::Blob(left), Self::Blob(right)) => left.cmp(right),
+            (Self::List(left), Self::List(right)) => left.cmp(right),
+            (Self::Map(left), Self::Map(right)) => left.cmp(right),
+            (Self::Custom(left_kind, left_properties), Self::Custom(right_kind, right_properties)) => {
+                match left_kind.cmp(right_kind) {
+                    Ordering::Equal => left_properties.cmp(right_properties),
                     ordering => ordering,
                 }
             }
-            (Self::Call(call), Self::Call(other_call)) => call.cmp(other_call),
+            (Self::Call(left), Self::Call(right)) => left.cmp(right),
 
             (Self::Undefined, _) => Ordering::Less,
 

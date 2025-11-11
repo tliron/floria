@@ -1,22 +1,22 @@
 use super::super::{
-    super::{data::*, errors::*, plugins::*, store::*},
+    super::{data::*, plugins::*, store::*},
     property::*,
 };
 
-use kutil::std::error::*;
+use problemo::*;
 
 impl Property {
     /// Prepare. Returns true if modified.
-    pub fn prepare<StoreT, ErrorReceiverT>(
+    pub fn prepare<StoreT, ProblemReceiverT>(
         &mut self,
         id: &ID,
         property_name: &str,
-        library: &mut Library<StoreT>,
-        errors: &mut ErrorReceiverT,
-    ) -> Result<bool, FloriaError>
+        context: &mut PluginContext<StoreT>,
+        problems: &mut ProblemReceiverT,
+    ) -> Result<bool, Problem>
     where
         StoreT: Clone + Send + Store,
-        ErrorReceiverT: ErrorReceiver<FloriaError>,
+        ProblemReceiverT: ProblemReceiver,
     {
         if self.value.is_none() {
             return Ok(false);
@@ -24,7 +24,7 @@ impl Property {
 
         if let Some(preparer) = &self.preparer {
             let call_site = CallSite::new(id.clone(), Some(property_name.into()));
-            if let Some(expression) = preparer.clone().evaluate(&call_site, library, errors)? {
+            if let Some(expression) = preparer.clone().evaluate(&call_site, context, problems)? {
                 self.value = Some(expression.into());
             }
             return Ok(true);
@@ -34,16 +34,16 @@ impl Property {
     }
 
     /// Update. Returns true if modified.
-    pub fn update<StoreT, ErrorReceiverT>(
+    pub fn update<StoreT, ProblemReceiverT>(
         &mut self,
         id: &ID,
         property_name: &str,
-        library: &mut Library<StoreT>,
-        errors: &mut ErrorReceiverT,
-    ) -> Result<bool, FloriaError>
+        context: &mut PluginContext<StoreT>,
+        problems: &mut ProblemReceiverT,
+    ) -> Result<bool, Problem>
     where
         StoreT: Clone + Send + Store,
-        ErrorReceiverT: ErrorReceiver<FloriaError>,
+        ProblemReceiverT: ProblemReceiver,
     {
         if self.read_only && self.value.is_some() {
             // Read-only properties can only be updated once.
@@ -52,7 +52,7 @@ impl Property {
 
         if let Some(updater) = &self.updater {
             let call_site = CallSite::new(id.clone(), Some(property_name.into()));
-            if let Some(expression) = updater.clone().evaluate(&call_site, library, errors)? {
+            if let Some(expression) = updater.clone().evaluate(&call_site, context, problems)? {
                 self.value = Some(expression.into());
             }
             return Ok(true);

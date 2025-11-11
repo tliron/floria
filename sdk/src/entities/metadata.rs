@@ -7,53 +7,33 @@ use super::super::{data::*, floria_bindings};
 /// Metadata.
 pub trait Metadata {
     /// Metadata.
-    fn metadata(&self) -> Vec<(floria_bindings::Expression, floria_bindings::Expression)>;
+    fn metadata(&self) -> &floria_bindings::MapResource;
 
     /// Class IDs.
     fn class_ids(&self) -> &Vec<floria_bindings::Id>;
 
-    /// Metadata expression.
-    fn metadata_expression(&self, key: &str) -> Option<Expression> {
-        for (key_, value) in self.metadata() {
-            if let floria_bindings::Expression::Text(key_) = key_
-                && key_ == key
-            {
-                return Some(value.into());
-            }
-        }
-        None
+    /// Get metadata.
+    fn get_metadata(&self, key: &str) -> Option<Expression> {
+        self.metadata().get(Expression::from(key).into()).map(|expression| expression.into())
     }
 
-    /// Metadata string.
-    fn metadata_string(&self, key: &str) -> Option<String> {
-        for (key_, value) in self.metadata() {
-            if let floria_bindings::Expression::Text(key_) = key_
-                && key_ == key
-            {
-                return if let floria_bindings::Expression::Text(text) = value { Some(text) } else { None };
-            }
+    /// Get metadata string.
+    fn get_metadata_string(&self, key: &str) -> Option<String> {
+        match self.get_metadata(key) {
+            Some(Expression::Text(text)) => Some(text),
+            _ => None,
         }
-        None
     }
 
-    /// Metadata map string.
-    fn metadata_map_string(&self, map_key: &str, string_key: &str) -> Option<String> {
-        for (key, value) in self.metadata() {
-            if let floria_bindings::Expression::Text(key) = key
-                && key == map_key
-            {
-                if let floria_bindings::Expression::Map(map_resource) = value {
-                    for (key, value) in map_resource.inner() {
-                        if let floria_bindings::Expression::Text(key_) = key
-                            && key_ == string_key
-                        {
-                            return if let floria_bindings::Expression::Text(text) = value { Some(text) } else { None };
-                        }
-                    }
-                }
-            }
+    /// Get metadata string.
+    fn get_metadata_sub_string(&self, key1: &str, key2: &str) -> Option<String> {
+        match self.get_metadata(key1) {
+            Some(Expression::Map(map)) => match map.map().into_get(key2) {
+                Some(Expression::Text(text)) => Some(text.clone()),
+                _ => None,
+            },
+            _ => None,
         }
-        None
     }
 
     /// True if has class ID.

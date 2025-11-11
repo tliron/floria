@@ -1,30 +1,30 @@
 use super::{
-    super::super::{errors::*, plugins, store::*},
+    super::super::{plugins, store::*},
     call::*,
     expression::*,
 };
 
-use {kutil::std::error::*, std::collections::*};
+use {problemo::*, std::collections::*};
 
 impl Expression {
     /// Evaluate the expression.
     ///
     /// Eager calls will be dispatched here.
-    pub fn evaluate<StoreT, ErrorReceiverT>(
+    pub fn evaluate<StoreT, ProblemReceiverT>(
         self,
         call_site: &plugins::CallSite,
-        library: &mut plugins::Library<StoreT>,
-        errors: &mut ErrorReceiverT,
-    ) -> Result<Option<Expression>, FloriaError>
+        context: &mut plugins::PluginContext<StoreT>,
+        problems: &mut ProblemReceiverT,
+    ) -> Result<Option<Expression>, Problem>
     where
         StoreT: Clone + Send + Store,
-        ErrorReceiverT: ErrorReceiver<FloriaError>,
+        ProblemReceiverT: ProblemReceiver,
     {
         match self {
             Self::List(list) => {
                 let mut expressions = Vec::with_capacity(list.len());
                 for item in list {
-                    expressions.push(item.evaluate(call_site, library, errors)?.unwrap_or_default());
+                    expressions.push(item.evaluate(call_site, context, problems)?.unwrap_or_default());
                 }
                 Ok(Some(expressions.into()))
             }
@@ -32,8 +32,8 @@ impl Expression {
             Self::Map(map) => {
                 let mut expressions = BTreeMap::default();
                 for (key, value) in map {
-                    if let Some(key) = key.evaluate(call_site, library, errors)? {
-                        expressions.insert(key, value.evaluate(call_site, library, errors)?.unwrap_or_default());
+                    if let Some(key) = key.evaluate(call_site, context, problems)? {
+                        expressions.insert(key, value.evaluate(call_site, context, problems)?.unwrap_or_default());
                     }
                 }
                 Ok(Some(expressions.into()))
@@ -41,7 +41,7 @@ impl Expression {
 
             Self::Call(call) => {
                 if matches!(call.kind, CallKind::Eager) {
-                    call.dispatch(call_site, library, errors)
+                    call.dispatch(call_site, context, problems)
                 } else {
                     Ok(Some(Self::Call(call)))
                 }

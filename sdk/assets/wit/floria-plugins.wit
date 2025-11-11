@@ -9,6 +9,7 @@ interface floria {
     log: func(source: string, message: string);
     evaluate-expression: func(expression: expression, call-site: call-site) -> result<option<expression>, string>;
     get-entity: func(id: id) -> result<entity, string>;
+    add-entity: func(entity: entity) -> result<_, string>;
 
     record call-site {
         id: id,
@@ -18,6 +19,7 @@ interface floria {
     // Entities
 
     variant entity-kind {
+        plugin,
         class,
         vertex-template,
         edge-template,
@@ -42,6 +44,7 @@ interface floria {
         metadata: map-resource,
         class-ids: list<id>,
         properties: list<tuple<string, property>>,
+        event-handlers: list<tuple<string, id, string>>,
 
         containing-vertex-id: option<id>,
         contained-vertex-ids: list<id>,
@@ -55,6 +58,7 @@ interface floria {
         metadata: map-resource,
         class-ids: list<id>,
         properties: list<tuple<string, property>>,
+        event-handlers: list<tuple<string, id, string>>,
 
         source-vertex-id: id,
         target-vertex-id: id,
@@ -80,7 +84,7 @@ interface floria {
         text(string),
         blob(list<u8>),
         %list(list-resource),
-        map(map-resource),
+        %map(map-resource),
         custom(custom-resource),
         call(call-resource),
     }
@@ -93,29 +97,31 @@ interface floria {
 
     resource list-resource {
         constructor(items: list<expression>);
-        inner: func() -> list<expression>;
+        take: func() -> list<expression>;
         length: func() -> u64;
+        get: func(index: u64) -> option<expression>;
     }
 
     resource map-resource {
         constructor(key-value-pairs: list<tuple<expression, expression>>);
-        inner: func() -> list<tuple<expression, expression>>;
+        take: func() -> list<tuple<expression, expression>>;
         length: func() -> u64;
+        get: func(key: expression) -> option<expression>;
     }
 
     resource custom-resource {
         constructor(kind: string, expression: expression);
-        inner: func() -> tuple<string, expression>;
+        take: func() -> tuple<string, expression>;
     }
 
     resource call-resource {
         constructor(plugin: string, function: string, arguments: list<expression>, kind: call-kind);
-        inner: func() -> tuple<string, string, list<expression>, call-kind>;
+        take: func() -> tuple<string, string, list<expression>, call-kind>;
     }
 }
 
 interface dispatch {
-    initialize: func() -> result<_, string>;
+    initialize: func(id: string) -> result<_, string>;
     dispatch: func(name: string, arguments: list<expression>, call-site: call-site) -> result<option<expression>, string>;
 
     record call-site {
@@ -126,6 +132,7 @@ interface dispatch {
     // Entities
 
     variant entity-kind {
+        plugin,
         class,
         vertex-template,
         edge-template,
@@ -150,7 +157,7 @@ interface dispatch {
         text(string),
         blob(list<u8>),
         %list(list-resource),
-        map(map-resource),
+        %map(map-resource),
         custom(custom-resource),
         call(call-resource),
     }
@@ -163,23 +170,23 @@ interface dispatch {
 
     resource list-resource {
         constructor(items: list<expression>);
-        inner: func() -> list<expression>;
+        replica: func() -> list<expression>;
         length: func() -> u64;
     }
 
     resource map-resource {
         constructor(key-value-pairs: list<tuple<expression, expression>>);
-        inner: func() -> list<tuple<expression, expression>>;
+        replica: func() -> list<tuple<expression, expression>>;
         length: func() -> u64;
     }
 
     resource custom-resource {
         constructor(kind: string, expression: expression);
-        inner: func() -> tuple<string, expression>;
+        replica: func() -> tuple<string, expression>;
     }
 
     resource call-resource {
         constructor(plugin: string, function: string, arguments: list<expression>, kind: call-kind);
-        inner: func() -> tuple<string, string, list<expression>, call-kind>;
+        replica: func() -> tuple<string, string, list<expression>, call-kind>;
     }
 }

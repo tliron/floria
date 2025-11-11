@@ -49,9 +49,9 @@ impl Expression {
     ///
     /// Use the [traverse!](crate::traverse) macro instead if you can. It will generally
     /// be more efficient because it doesn't require an allocated array.
-    pub fn traverse<'own, IterableT>(&self, keys: IterableT) -> Option<&Self>
+    pub fn traverse<'keys, IterableT>(&self, keys: IterableT) -> Option<&Self>
     where
-        IterableT: IntoIterator<Item = &'own Self>,
+        IterableT: IntoIterator<Item = &'keys Self>,
     {
         let mut found = self;
         for key in keys {

@@ -59,13 +59,13 @@ impl GuestCustomResource for Custom {
         Self { kind, inner }
     }
 
-    fn inner(&self) -> (String, Expression) {
+    fn replica(&self) -> (String, Expression) {
         (self.kind.clone(), self.inner.clone())
     }
 }
 
 impl fmt::Display for Custom {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "kind: {}, inner: {}", self.kind, self.inner)
     }
 }

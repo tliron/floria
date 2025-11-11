@@ -21,6 +21,7 @@ impl From<dispatch_bindings::Id> for Id {
 impl From<EntityKind> for dispatch_bindings::EntityKind {
     fn from(kind: EntityKind) -> Self {
         match kind {
+            EntityKind::Plugin => Self::Plugin,
             EntityKind::Class => Self::Class,
             EntityKind::VertexTemplate => Self::VertexTemplate,
             EntityKind::EdgeTemplate => Self::EdgeTemplate,
@@ -33,6 +34,7 @@ impl From<EntityKind> for dispatch_bindings::EntityKind {
 impl From<dispatch_bindings::EntityKind> for EntityKind {
     fn from(kind: dispatch_bindings::EntityKind) -> Self {
         match kind {
+            dispatch_bindings::EntityKind::Plugin => Self::Plugin,
             dispatch_bindings::EntityKind::Class => Self::Class,
             dispatch_bindings::EntityKind::VertexTemplate => Self::VertexTemplate,
             dispatch_bindings::EntityKind::EdgeTemplate => Self::EdgeTemplate,
@@ -56,23 +58,23 @@ impl From<&Expression> for data::Expression {
             Expression::Blob(blob) => Self::Blob(blob.clone()),
 
             Expression::List(list_resource) => {
-                let list: Vec<Self> = list_resource.inner().into_iter().map(|item| item.into()).collect();
+                let list: Vec<Self> = list_resource.take().into_iter().map(|item| item.into()).collect();
                 list.into()
             }
 
             Expression::Map(map_resource) => {
                 let map: BTreeMap<_, _> =
-                    map_resource.inner().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
+                    map_resource.take().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
                 map.into()
             }
 
             Expression::Custom(custom_resource) => {
-                let (kind, inner) = custom_resource.inner();
+                let (kind, inner) = custom_resource.take();
                 data::Custom { kind, inner: inner.into() }.into()
             }
 
             Expression::Call(call_resource) => {
-                let (plugin, function, arguments, kind) = call_resource.inner();
+                let (plugin, function, arguments, kind) = call_resource.take();
                 let arguments: Vec<_> = arguments.into_iter().map(|item| item.into()).collect();
                 data::Call { plugin, function, arguments, kind: kind.into() }.into()
             }
@@ -92,23 +94,23 @@ impl From<Expression> for data::Expression {
             Expression::Blob(blob) => Self::Blob(blob),
 
             Expression::List(list_resource) => {
-                let list: Vec<Self> = list_resource.inner().into_iter().map(|item| item.into()).collect();
+                let list: Vec<Self> = list_resource.take().into_iter().map(|item| item.into()).collect();
                 list.into()
             }
 
             Expression::Map(map_resource) => {
                 let map: BTreeMap<_, _> =
-                    map_resource.inner().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
+                    map_resource.take().into_iter().map(|(key, value)| (key.into(), value.into())).collect();
                 map.into()
             }
 
             Expression::Custom(custom_resource) => {
-                let (kind, inner) = custom_resource.inner();
+                let (kind, inner) = custom_resource.take();
                 data::Custom { kind, inner: inner.into() }.into()
             }
 
             Expression::Call(call_resource) => {
-                let (plugin, function, arguments, kind) = call_resource.inner();
+                let (plugin, function, arguments, kind) = call_resource.take();
                 let arguments: Vec<_> = arguments.into_iter().map(|item| item.into()).collect();
                 data::Call { plugin, function, arguments, kind: kind.into() }.into()
             }
