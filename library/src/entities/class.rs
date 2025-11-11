@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     utils::*,
 };
 
@@ -25,8 +25,8 @@ pub struct Class {
 
 impl Class {
     /// Constructor.
-    pub fn new_for(directory: Directory, id: ByteString) -> Self {
-        Self::new_with(ID::new_for(EntityKind::Class, directory, id))
+    pub fn new_for(directory: Directory, name: ByteString) -> Result<Self, MalformedError> {
+        Ok(Self::new_with(ID::new_for(EntityKind::Class, directory, name)?))
     }
 
     /// Constructor.
@@ -67,8 +67,7 @@ where
     {
         context.theme.write_heading(writer, "Class")?;
         depict_id("id", Some(&self.class.id), false, writer, context)?;
-        depict_metadata(&self.class.metadata, true, writer, context)?;
-        Ok(())
+        depict_metadata(&self.class.metadata, true, writer, context)
     }
 }
 

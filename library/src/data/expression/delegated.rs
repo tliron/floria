@@ -5,6 +5,49 @@ use {
     std::{cmp::*, fmt, hash::*, io},
 };
 
+impl IntoDepictionMarkup for Expression {
+    fn into_depiction_markup(self) -> String {
+        match self {
+            Self::Undefined => "|symbol|Undefined|".into(),
+
+            Self::Null => "|symbol|Null|".into(),
+
+            Self::Integer(integer) => format!("|number|{:+}|", integer),
+
+            Self::UnsignedInteger(unsigned_integer) => format!("|number|{}|", unsigned_integer),
+
+            Self::Float(float) => format!("|number|{:?}|", float),
+
+            Self::Boolean(boolean) => format!("|symbol|{}|", boolean),
+
+            Self::Text(text) => format!("|string|{}|", escape_depiction_markup(format!("{:?}", text))),
+
+            Self::Blob(blob) => format!("|number|{}| bytes", blob.len()),
+
+            Self::List(list) => {
+                let items: Vec<String> = list.into_iter().map(|item| item.into_depiction_markup()).collect();
+                format!("|delimiter|[|{}|delimiter|]|", items.join("|delimiter|,|"))
+            }
+
+            Self::Map(map) => {
+                let items: Vec<String> = map
+                    .into_iter()
+                    .map(|(key, value)| {
+                        format!("{}|delimiter|:|{}", key.into_depiction_markup(), value.into_depiction_markup())
+                    })
+                    .collect();
+                format!("|delimiter|{{|{}|delimiter|}}|", items.join("|delimiter|,|"))
+            }
+
+            Self::Custom(kind, inner) => {
+                format!("|heading|Custom| |name|{}| {}", escape_depiction_markup(kind), inner.into_depiction_markup())
+            }
+
+            Self::Call(call) => call.into_depiction_markup(),
+        }
+    }
+}
+
 impl Depict for Expression {
     fn depict<WriteT>(&self, writer: &mut WriteT, context: &DepictionContext) -> io::Result<()>
     where
@@ -75,7 +118,10 @@ impl Depict for Expression {
                 inner.depict(writer, context)
             }
 
-            Self::Call(call) => call.depict(writer, context),
+            Self::Call(call) => {
+                context.separate(writer)?;
+                call.depict(writer, &context.child().with_separator(false))
+            }
         }
     }
 }

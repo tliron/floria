@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     template::*,
     utils::*,
 };
@@ -42,8 +42,12 @@ impl VertexTemplate {
     }
 
     /// Constructor.
-    pub fn new_for(directory: Directory, id: ByteString, containing_vertex_template_id: Option<ID>) -> Self {
-        Self::new_with(ID::new_for(EntityKind::VertexTemplate, directory, id), containing_vertex_template_id)
+    pub fn new_for(
+        directory: Directory,
+        name: ByteString,
+        containing_vertex_template_id: Option<ID>,
+    ) -> Result<Self, MalformedError> {
+        Ok(Self::new_with(ID::new_for(EntityKind::VertexTemplate, directory, name)?, containing_vertex_template_id))
     }
 
     /// Constructor.

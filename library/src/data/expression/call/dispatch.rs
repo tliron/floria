@@ -28,15 +28,15 @@ impl Call {
             arguments.push(argument);
         }
 
-        let plugin = library.dispatch_plugin(&self.plugin)?;
-        let mut plugin = plugin.lock().map_err(plugins::PluginError::from)?;
+        let plugin_ref = unwrap_or_give_and_return!(
+            library.maybe_load_dispatch_plugin_ref(&self.function.plugin_id),
+            errors,
+            Ok(None)
+        );
 
-        Ok(match plugin.dispatch(&self.function, arguments, call_site) {
-            Ok(expression) => expression,
-            Err(error) => {
-                errors.give(error)?;
-                None
-            }
-        })
+        let mut plugin =
+            unwrap_or_give_and_return!(plugin_ref.lock().map_err(plugins::PluginError::from), errors, Ok(None));
+
+        Ok(unwrap_or_give!(plugin.dispatch(&self.function.name, arguments, call_site), errors, None))
     }
 }

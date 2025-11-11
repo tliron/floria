@@ -1,4 +1,4 @@
-use super::errors::*;
+use super::{super::errors::*, errors::*};
 
 use anyhow::Context;
 
@@ -17,7 +17,7 @@ pub struct Environment {
 
 impl Environment {
     /// Constructor.
-    pub fn new(debug: bool) -> Result<Self, PluginError> {
+    pub fn new(debug: bool) -> Result<Self, FloriaError> {
         let mut config = wasmtime::Config::new();
 
         // This *must* be enabled just to load Wasm with debug info, even if we don't use a debugger

@@ -1,7 +1,12 @@
-use super::{super::store::*, dispatch::*, environment::*, errors::*};
+use super::{
+    super::{data::*, errors::*, store::*},
+    dispatch::*,
+    environment::*,
+    errors::*,
+};
 
 use {
-    kutil::std::{collections::*, immutable::*},
+    kutil::std::collections::*,
     std::{path, sync::*},
 };
 
@@ -24,7 +29,7 @@ where
     pub store: StoreT,
 
     /// Dispatch plugins.
-    pub dispatch_plugins: Arc<FastConcurrentHashMap<ByteString, DispatchPluginRef<StoreT>>>,
+    pub dispatch_plugins: Arc<FastConcurrentHashMap<ID, DispatchPluginRef<StoreT>>>,
 }
 
 impl<StoreT> Library<StoreT>
@@ -36,41 +41,64 @@ where
         Self { environment, store, dispatch_plugins: Default::default() }
     }
 
+    /// Get a dispatch plugin.
+    pub fn dispatch_plugin_ref(&mut self, plugin_id: &ID) -> Result<DispatchPluginRef<StoreT>, FloriaError> {
+        self.dispatch_plugins
+            .pin()
+            .get(plugin_id)
+            .cloned()
+            .ok_or_else(|| PluginError::NotFound(plugin_id.to_string()).into())
+    }
+
     /// Add a dispatch plugin.
     pub fn add_dispatch_plugin(
         &mut self,
-        plugin_name: ByteString,
+        plugin_id: ID,
         bytes: &[u8],
         precompiled: bool,
-    ) -> Result<(), PluginError>
+    ) -> Result<DispatchPluginRef<StoreT>, FloriaError>
     where
         StoreT: Clone + Send,
     {
-        let mut dispatch = DispatchPlugin::new_from_bytes(bytes, precompiled, plugin_name.clone(), self)?;
+        let mut dispatch = DispatchPlugin::new_from_bytes(bytes, precompiled, plugin_id.clone(), self)?;
         dispatch.initialize()?;
-        self.dispatch_plugins.pin().insert(plugin_name, dispatch.into());
-        Ok(())
+        let dispatch_ref: DispatchPluginRef<_> = dispatch.into();
+        self.dispatch_plugins.pin().insert(plugin_id, dispatch_ref.clone());
+        Ok(dispatch_ref)
     }
 
     /// Load a dispatch plugin.
     pub fn load_dispatch_plugin<PathT>(
         &mut self,
-        plugin_name: ByteString,
+        plugin_id: ID,
         path: PathT,
         precompiled: bool,
-    ) -> Result<(), PluginError>
+    ) -> Result<DispatchPluginRef<StoreT>, FloriaError>
     where
         StoreT: Clone + Send,
         PathT: AsRef<path::Path>,
     {
-        let mut dispatch = DispatchPlugin::new_from_file(path, precompiled, plugin_name.clone(), self)?;
+        let mut dispatch = DispatchPlugin::new_from_file(path, precompiled, plugin_id.clone(), self)?;
         dispatch.initialize()?;
-        self.dispatch_plugins.pin().insert(plugin_name, dispatch.into());
-        Ok(())
+        let dispatch_ref: DispatchPluginRef<_> = dispatch.into();
+        self.dispatch_plugins.pin().insert(plugin_id, dispatch_ref.clone());
+        Ok(dispatch_ref)
     }
 
-    /// Get a dispatch plugin.
-    pub fn dispatch_plugin(&mut self, plugin_name: &str) -> Result<DispatchPluginRef<StoreT>, PluginError> {
-        self.dispatch_plugins.pin().get(plugin_name).cloned().ok_or_else(|| PluginError::NotFound(plugin_name.into()))
+    /// Get a dispatch plugin or load it.
+    pub fn maybe_load_dispatch_plugin_ref(&mut self, plugin_id: &ID) -> Result<DispatchPluginRef<StoreT>, FloriaError>
+    where
+        StoreT: Clone + Send,
+    {
+        let path = match self.dispatch_plugins.pin().get(plugin_id) {
+            Some(dispatch) => return Ok(dispatch.clone()),
+            None => match self.store.get_plugin(plugin_id)? {
+                Some(plugin) => plugin.url.clone(),
+                None => return Err(PluginError::NotFound(plugin_id.to_string()).into()),
+            },
+        };
+
+        let path: &str = &path;
+        self.load_dispatch_plugin(plugin_id.clone(), path, false)
     }
 }

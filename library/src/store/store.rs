@@ -3,6 +3,8 @@ use super::{
     errors::*,
 };
 
+use kutil::std::immutable::*;
+
 //
 // Store
 //
@@ -14,6 +16,15 @@ use super::{
 pub trait Store {
     /// Create ID.
     fn create_id(&self, id: &mut ID) -> Result<(), StoreError>;
+
+    /// Get plugin.
+    fn get_plugin(&self, id: &ID) -> Result<Option<Plugin>, StoreError>;
+
+    /// Get plugin by URL.
+    fn get_plugin_by_url(&self, url: &ByteString) -> Result<Option<Plugin>, StoreError>;
+
+    /// Add plugin.
+    fn add_plugin(&self, plugin: Plugin) -> Result<(), StoreError>;
 
     /// Get class.
     fn get_class(&self, id: &ID) -> Result<Option<Class>, StoreError>;
@@ -67,6 +78,7 @@ where
 {
     fn get_entity_as_expression(&self, id: &ID) -> Result<Option<Expression>, StoreError> {
         let variant = match id.kind {
+            EntityKind::Plugin => self.get_plugin(&id)?.map(|plugin| Ok(plugin.into())),
             EntityKind::Class => self.get_class(&id)?.map(|class| Ok(class.into())),
             EntityKind::VertexTemplate => {
                 self.get_vertex_template(&id)?.map(|vertex_template| vertex_template.into_expression(false, self))

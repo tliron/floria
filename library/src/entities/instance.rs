@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     class::*,
     property::*,
 };
@@ -27,12 +27,20 @@ pub struct Instance {
 
     /// Properties.
     pub properties: BTreeMap<ByteString, Property>,
+
+    /// Event handlers.
+    pub event_handlers: BTreeMap<ByteString, FunctionName>,
 }
 
 impl Instance {
     /// Constructor.
-    pub fn new_for(kind: EntityKind, directory: Directory, id: ByteString, origin_template_id: Option<ID>) -> Self {
-        Self::new_with(ID::new_for(kind, directory, id), origin_template_id)
+    pub fn new_for(
+        kind: EntityKind,
+        directory: Directory,
+        name: ByteString,
+        origin_template_id: Option<ID>,
+    ) -> Result<Self, MalformedError> {
+        Ok(Self::new_with(ID::new_for(kind, directory, name)?, origin_template_id))
     }
 
     /// Constructor.
@@ -43,6 +51,7 @@ impl Instance {
             metadata: Default::default(),
             class_ids: Default::default(),
             properties: Default::default(),
+            event_handlers: Default::default(),
         }
     }
 

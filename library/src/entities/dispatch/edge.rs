@@ -1,5 +1,5 @@
 use super::super::{
-    super::{errors::*, plugins::*, store::*},
+    super::{data::*, errors::*, plugins::*, store::*},
     edge::*,
     propagation::*,
 };
@@ -7,6 +7,40 @@ use super::super::{
 use kutil::std::error::*;
 
 impl Edge {
+    /// Handle event.
+    pub fn handle_event<StoreT, ErrorReceiverT>(
+        &mut self,
+        event: &str,
+        arguments: &Vec<Expression>,
+        propagation: &mut Propagation,
+        library: &mut Library<StoreT>,
+        errors: &mut ErrorReceiverT,
+    ) -> Result<(), FloriaError>
+    where
+        StoreT: Clone + Send + Store,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
+    {
+        self.instance.handle_event(event, arguments.clone(), library, errors)?;
+
+        if propagation.source_vertex {
+            if propagation.should(&self.source_vertex_id) {
+                if let Some(mut source_vertex) = library.store.get_vertex(&self.source_vertex_id)? {
+                    source_vertex.instance.handle_event(event, arguments.clone(), library, errors)?;
+                }
+            }
+        }
+
+        if propagation.target_vertex {
+            if propagation.should(&self.target_vertex_id) {
+                if let Some(mut target_vertex) = library.store.get_vertex(&self.target_vertex_id)? {
+                    target_vertex.instance.handle_event(event, arguments.clone(), library, errors)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     /// Update properties.
     pub fn update_properties<StoreT, ErrorReceiverT>(
         &mut self,

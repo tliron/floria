@@ -1,6 +1,9 @@
-use super::super::{super::store::*, library::*};
+use super::super::{
+    super::{data::*, store::*},
+    library::*,
+};
 
-use {kutil::std::immutable::*, wasmtime_wasi::*};
+use wasmtime_wasi::*;
 
 //
 // PluginHost
@@ -11,8 +14,8 @@ pub struct PluginHost<StoreT>
 where
     StoreT: 'static + Store,
 {
-    /// Name.
-    pub name: ByteString,
+    /// Plugin ID.
+    pub id: ID,
 
     /// Library.
     pub library: Library<StoreT>,
@@ -29,9 +32,9 @@ where
     StoreT: Store,
 {
     /// Constructor.
-    pub fn new(name: ByteString, library: Library<StoreT>) -> Self {
+    pub fn new(id: ID, library: Library<StoreT>) -> Self {
         Self {
-            name,
+            id,
             library,
             wasi: WasiCtxBuilder::new().inherit_stdout().inherit_stderr().build(),
             resources: ResourceTable::default(),

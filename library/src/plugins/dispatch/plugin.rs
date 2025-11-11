@@ -1,6 +1,12 @@
-use super::super::{super::store::*, bindings, errors::*, host::*, library::*};
+use super::super::{
+    super::{data::*, store::*},
+    bindings,
+    errors::*,
+    host::*,
+    library::*,
+};
 
-use {anyhow::Context, kutil::std::immutable::*, std::path, wasmtime::component::*};
+use {anyhow::Context, std::path, wasmtime::component::*};
 
 //
 // DispatchPlugin
@@ -11,8 +17,8 @@ pub struct DispatchPlugin<StoreT>
 where
     StoreT: 'static + Store,
 {
-    /// Name.
-    pub name: ByteString,
+    /// Plugin ID.
+    pub id: ID,
 
     /// Host
     pub host: wasmtime::Store<PluginHost<StoreT>>,
@@ -26,23 +32,14 @@ where
     StoreT: Clone + Send + Store,
 {
     /// Constructor.
-    pub fn new(
-        name: ByteString,
-        host: wasmtime::Store<PluginHost<StoreT>>,
-        bindings: bindings::DispatchPlugin,
-    ) -> Self {
-        Self { name, host, bindings }
+    pub fn new(id: ID, host: wasmtime::Store<PluginHost<StoreT>>, bindings: bindings::DispatchPlugin) -> Self {
+        Self { id, host, bindings }
     }
 
     /// Constructor.
-    pub fn new_from_component(
-        component: Component,
-        name: ByteString,
-        library: &Library<StoreT>,
-    ) -> Result<Self, PluginError> {
+    pub fn new_from_component(component: Component, id: ID, library: &Library<StoreT>) -> Result<Self, PluginError> {
         // Host
-        let mut host =
-            wasmtime::Store::new(&library.environment.engine, PluginHost::new(name.clone(), library.clone()));
+        let mut host = wasmtime::Store::new(&library.environment.engine, PluginHost::new(id.clone(), library.clone()));
 
         // Linker
 
@@ -61,7 +58,7 @@ where
             .context("instantiating dispatch plugin bindings")
             .map_err(PluginError::InstantiateWasm)?;
 
-        Ok(Self::new(name, host, bindings))
+        Ok(Self::new(id, host, bindings))
     }
 
     /// Constructor.
@@ -70,7 +67,7 @@ where
     pub fn new_from_bytes(
         bytes: &[u8],
         precompiled: bool,
-        name: ByteString,
+        id: ID,
         library: &Library<StoreT>,
     ) -> Result<Self, PluginError> {
         let component = if precompiled {
@@ -86,7 +83,7 @@ where
                 .map_err(PluginError::LoadWasm)?
         };
 
-        Self::new_from_component(component, name, library)
+        Self::new_from_component(component, id, library)
     }
 
     /// Constructor.
@@ -95,7 +92,7 @@ where
     pub fn new_from_file<PathT>(
         path: PathT,
         precompiled: bool,
-        name: ByteString,
+        id: ID,
         library: &Library<StoreT>,
     ) -> Result<Self, PluginError>
     where
@@ -114,6 +111,6 @@ where
                 .map_err(PluginError::LoadWasm)?
         };
 
-        Self::new_from_component(component, name, library)
+        Self::new_from_component(component, id, library)
     }
 }

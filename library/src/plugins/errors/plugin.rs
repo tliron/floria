@@ -1,4 +1,7 @@
-use super::{super::dispatch::*, initialization::*};
+use super::{
+    super::{super::errors::*, dispatch::*},
+    initialization::*,
+};
 
 use {
     depiction::*,
@@ -50,6 +53,19 @@ pub enum PluginError {
     /// Concurrency.
     #[error("concurrency: {0}")]
     Concurrency(String),
+
+    /// Malformed.
+    #[error("malformed: {0}")]
+    Malformed(#[from] MalformedError),
+}
+
+impl IntoDepictionMarkup for PluginError {
+    fn into_depiction_markup(self) -> String {
+        match self {
+            Self::Dispatch(error) => error.into_depiction_markup(),
+            _ => escape_depiction_markup(self),
+        }
+    }
 }
 
 impl Depict for PluginError {

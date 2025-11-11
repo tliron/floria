@@ -6,6 +6,7 @@ impl EntityKind {
     /// As string.
     pub fn as_str(&self) -> &'static str {
         match self {
+            Self::Plugin => "Plugin",
             Self::Class => "Class",
             Self::VertexTemplate => "VertexTemplate",
             Self::EdgeTemplate => "EdgeTemplate",

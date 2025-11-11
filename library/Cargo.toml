@@ -32,12 +32,12 @@ ordered-float = "5.1.0"
 thiserror = "2.0.17"
 tracing = "0.1.41"
 # https://docs.rs/wasmtime/latest/wasmtime/index.html#crate-features
-wasmtime = { optional = true, version = "38.0.3", default-features = false, features = [
+wasmtime = { optional = true, version = "38.0.4", default-features = false, features = [
     "cranelift",
     "parallel-compilation",
     "pooling-allocator",
 ] }
-wasmtime-wasi = { optional = true, version = "38.0.3", default-features = false, features = ["p2"] }
+wasmtime-wasi = { optional = true, version = "38.0.4", default-features = false, features = ["p2"] }
 
 [features]
 plugins = ["dep:wasmtime", "dep:wasmtime-wasi"]

@@ -1,5 +1,5 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     edge::*,
     template::*,
     utils::*,
@@ -49,15 +49,15 @@ impl EdgeTemplate {
     /// Constructor.
     pub fn new_for(
         directory: Directory,
-        id: ByteString,
+        name: ByteString,
         containing_source_vertex_template_id: ID,
         target_selector: VertexSelector,
-    ) -> Self {
-        Self::new_with(
-            ID::new_for(EntityKind::EdgeTemplate, directory, id),
+    ) -> Result<Self, MalformedError> {
+        Ok(Self::new_with(
+            ID::new_for(EntityKind::EdgeTemplate, directory, name)?,
             containing_source_vertex_template_id,
             target_selector,
-        )
+        ))
     }
 
     /// Constructor.

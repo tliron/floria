@@ -1,7 +1,6 @@
 use super::{
     super::{data::*, store::*},
     class::*,
-    event_handler::*,
     instance::*,
     property::*,
 };
@@ -28,7 +27,7 @@ pub struct Template {
     pub property_templates: BTreeMap<ByteString, Property>,
 
     /// Event handlers.
-    pub event_handlers: Vec<EventHandler>,
+    pub event_handlers: BTreeMap<ByteString, FunctionName>,
 }
 
 impl Template {

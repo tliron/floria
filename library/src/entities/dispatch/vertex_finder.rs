@@ -19,9 +19,12 @@ impl VertexFinder {
         ErrorReceiverT: ErrorReceiver<FloriaError>,
     {
         let call_site = CallSite::new(source_vertex_id.clone(), Default::default());
-        Ok(self.finder.clone().dispatch(&call_site, library, errors)?.and_then(|id| match id {
-            Expression::Text(id) => Some(ID::parse(EntityKind::Vertex, &id)),
-            _ => None,
-        }))
+        Ok(match self.finder.clone().dispatch(&call_site, library, errors)? {
+            Some(id) => match id {
+                Expression::Text(id) => Some(ID::parse(EntityKind::Vertex, &id)?),
+                _ => None,
+            },
+            None => None,
+        })
     }
 }

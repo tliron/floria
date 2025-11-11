@@ -4,6 +4,8 @@ use super::{
     store::*,
 };
 
+use kutil::std::immutable::*;
+
 //
 // StoreWrapper
 //
@@ -33,6 +35,27 @@ where
         self.inner.create_id(id)?;
         tracing::debug!(id = id.to_string(), "create_id");
         Ok(())
+    }
+
+    fn get_plugin(&self, id: &ID) -> Result<Option<Plugin>, StoreError> {
+        tracing::debug!(id = id.to_string(), "get_plugin");
+        if id.kind != EntityKind::Plugin {
+            return Err(StoreError::ID(format!("kind is not Plugin: {}", id.kind)));
+        }
+        self.inner.get_plugin(id)
+    }
+
+    fn get_plugin_by_url(&self, url: &ByteString) -> Result<Option<Plugin>, StoreError> {
+        tracing::debug!("get_plugin_by_url");
+        self.inner.get_plugin_by_url(url)
+    }
+
+    fn add_plugin(&self, plugin: Plugin) -> Result<(), StoreError> {
+        tracing::debug!(id = plugin.id.to_string(), "add_plugin");
+        if plugin.id.kind != EntityKind::Plugin {
+            return Err(StoreError::ID(format!("kind is not Plugin: {}", plugin.id.kind)));
+        }
+        self.inner.add_plugin(plugin)
     }
 
     fn get_class(&self, id: &ID) -> Result<Option<Class>, StoreError> {

@@ -7,6 +7,64 @@ use super::super::{
 use kutil::std::error::*;
 
 impl Vertex {
+    /// Handle event.
+    pub fn handle_event<StoreT, ErrorReceiverT>(
+        &mut self,
+        event: &str,
+        arguments: &Vec<Expression>,
+        propagation: &mut Propagation,
+        library: &mut Library<StoreT>,
+        errors: &mut ErrorReceiverT,
+    ) -> Result<(), FloriaError>
+    where
+        StoreT: Clone + Send + Store,
+        ErrorReceiverT: ErrorReceiver<FloriaError>,
+    {
+        self.instance.handle_event(event, arguments.clone(), library, errors)?;
+
+        if propagation.containing_vertex
+            && let Some(containing_vertex_id) = &self.containing_vertex_id
+        {
+            if propagation.should(containing_vertex_id) {
+                if let Some(mut containing_vertex) = library.store.get_vertex(containing_vertex_id)? {
+                    containing_vertex.handle_event(event, arguments, propagation, library, errors)?;
+                }
+            }
+        }
+
+        if propagation.contained_vertexes {
+            for contained_vertex_id in &self.contained_vertex_ids {
+                if propagation.should(contained_vertex_id) {
+                    if let Some(mut contained_vertex) = library.store.get_vertex(contained_vertex_id)? {
+                        contained_vertex.handle_event(event, arguments, propagation, library, errors)?;
+                    }
+                }
+            }
+        }
+
+        if propagation.incoming_edges {
+            for incoming_edge_id in &self.incoming_edge_ids {
+                if propagation.should(incoming_edge_id) {
+                    if let Some(mut incoming_edge) = library.store.get_edge(incoming_edge_id)? {
+                        incoming_edge.handle_event(event, arguments, propagation, library, errors)?;
+                    }
+                }
+            }
+        }
+
+        if propagation.outgoing_edges {
+            for outgoing_edge_id in &self.outgoing_edge_ids {
+                if propagation.should(outgoing_edge_id) {
+                    if let Some(mut outgoing_edge) = library.store.get_edge(outgoing_edge_id)? {
+                        outgoing_edge.handle_event(event, arguments, propagation, library, errors)?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     /// Update properties.
     pub fn update_properties<StoreT, ErrorReceiverT>(
         &mut self,

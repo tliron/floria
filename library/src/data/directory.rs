@@ -1,8 +1,19 @@
+use super::super::errors::*;
+
 use {
     depiction::*,
     kutil::std::{immutable::*, iter::*},
     std::{convert::*, fmt, io, slice, str::*, vec},
 };
+
+/// Directory delimiter.
+pub const DIRECTORY_DELIMITER: char = '/';
+
+/// Directory delimiter.
+pub const DIRECTORY_DELIMITER_STRING: &str = "/";
+
+/// Invalid directory characters.
+pub const INVALID_DIRECTORY_CHARACTERS: [char; 1] = [DIRECTORY_DELIMITER];
 
 //
 // Directory
@@ -10,11 +21,34 @@ use {
 
 /// Directory.
 #[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Directory(pub Vec<ByteString>);
+pub struct Directory(Vec<ByteString>);
 
 // TODO: don't allow segments that contain "/" or ":"? escape them?
 
 impl Directory {
+    /// Constructor.
+    pub fn new(segments: Vec<ByteString>) -> Result<Self, MalformedError> {
+        for segment in &segments {
+            for c in INVALID_DIRECTORY_CHARACTERS {
+                if segment.contains(c) {
+                    return Err(format!("directory segment contains invalid character: {}", c).into());
+                }
+            }
+        }
+
+        Ok(Self(segments))
+    }
+
+    /// Constructor.
+    pub fn new_unchecked(segments: Vec<ByteString>) -> Self {
+        Self(segments)
+    }
+
+    /// True if empty.
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     /// Add a segment to the start.
     pub fn add_first_segment(&mut self, segment: ByteString) {
         self.0.insert(0, segment);
@@ -26,6 +60,14 @@ impl Directory {
     }
 }
 
+impl IntoDepictionMarkup for Directory {
+    fn into_depiction_markup(self) -> String {
+        let segments: Vec<String> =
+            self.0.into_iter().map(|segment| format!("|meta|{}|", escape_depiction_markup(segment))).collect();
+        segments.join(&format!("|delimiter|{}|", DIRECTORY_DELIMITER))
+    }
+}
+
 impl Depict for Directory {
     fn depict<WriteT>(&self, writer: &mut WriteT, context: &DepictionContext) -> io::Result<()>
     where
@@ -34,9 +76,9 @@ impl Depict for Directory {
         if !self.0.is_empty() {
             context.separate(writer)?;
             for (segment, last) in IterateWithLast::new(self) {
-                write!(writer, "{}", context.theme.name_style.remove_all_effects().style(segment))?;
+                context.theme.write_meta(writer, segment)?;
                 if !last {
-                    context.theme.write_delimiter(writer, '/')?;
+                    context.theme.write_delimiter(writer, DIRECTORY_DELIMITER)?;
                 }
             }
         }
@@ -46,26 +88,17 @@ impl Depict for Directory {
 
 impl fmt::Display for Directory {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{}", self.0.join("/"))
+        write!(formatter, "{}", self.0.join(DIRECTORY_DELIMITER_STRING))
     }
 }
 
 // Conversions
 
 impl FromStr for Directory {
-    type Err = Infallible;
+    type Err = MalformedError;
 
     fn from_str(representation: &str) -> Result<Self, Self::Err> {
-        Ok(Self(representation.split('/').map(|segment| segment.into()).collect()))
-    }
-}
-
-impl FromIterator<ByteString> for Directory {
-    fn from_iter<IteratorT>(iterator: IteratorT) -> Self
-    where
-        IteratorT: IntoIterator<Item = ByteString>,
-    {
-        Self(iterator.into_iter().collect())
+        Self::new(representation.split(DIRECTORY_DELIMITER).map(|segment| segment.into()).collect())
     }
 }
 

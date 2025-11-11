@@ -21,6 +21,7 @@ impl From<dispatch_bindings::Id> for Id {
 impl From<EntityKind> for dispatch_bindings::EntityKind {
     fn from(kind: EntityKind) -> Self {
         match kind {
+            EntityKind::Plugin => Self::Plugin,
             EntityKind::Class => Self::Class,
             EntityKind::VertexTemplate => Self::VertexTemplate,
             EntityKind::EdgeTemplate => Self::EdgeTemplate,
@@ -33,6 +34,7 @@ impl From<EntityKind> for dispatch_bindings::EntityKind {
 impl From<dispatch_bindings::EntityKind> for EntityKind {
     fn from(kind: dispatch_bindings::EntityKind) -> Self {
         match kind {
+            dispatch_bindings::EntityKind::Plugin => Self::Plugin,
             dispatch_bindings::EntityKind::Class => Self::Class,
             dispatch_bindings::EntityKind::VertexTemplate => Self::VertexTemplate,
             dispatch_bindings::EntityKind::EdgeTemplate => Self::EdgeTemplate,
