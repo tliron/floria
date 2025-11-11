@@ -26,7 +26,7 @@ impl Id {
 }
 
 impl fmt::Display for Id {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         if !self.directory.is_empty() {
             write!(formatter, "{}:", self.directory.join("/"))?;
         }

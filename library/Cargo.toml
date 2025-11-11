@@ -4,7 +4,7 @@ edition = "2024"
 name = "floria"
 description = "Floria data system for cloud orchestration"
 version = "0.0.5"
-rust-version = "1.91"
+rust-version = "1.93"
 
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tliron/floria"
@@ -23,31 +23,81 @@ keywords = [
 ]
 
 [dependencies]
-anyhow = "1.0.100"
 compris = { version = "=0.0.11", features = ["serde"] }
 depiction = "=0.0.1"
+derive_more = { version = "2.1.1", features = ["display", "error", "from"] }
 duplicate = "2.0.1"
 kutil = { version = "=0.0.5", features = ["std", "fast_collections", "immutable"] }
 ordered-float = "5.1.0"
-thiserror = "2.0.17"
-tracing = "0.1.41"
+problemo = { version = "=0.0.10", features = ["anyhow"] }
+tracing = "0.1.44"
+
+# plugins
+read-url = { optional = true, version = "=0.0.10", features = ["blocking"] }
 # https://docs.rs/wasmtime/latest/wasmtime/index.html#crate-features
-wasmtime = { optional = true, version = "38.0.3", default-features = false, features = [
+wasmtime = { optional = true, version = "41.0.3", default-features = false, features = [
     "cranelift",
     "parallel-compilation",
     "pooling-allocator",
+    "gc-drc",
+    "cache",
 ] }
-wasmtime-wasi = { optional = true, version = "38.0.3", default-features = false, features = ["p2"] }
+wasmtime-wasi = { optional = true, version = "41.0.3", default-features = false, features = ["p2"] }
+
+# plugins-http
+http = { optional = true, version = "1.4.0" }
+http-body-util = { optional = true, version = "0.1.3" }
+hyper = { optional = true, version = "1.8.1" }
+rustls = { optional = true, version = "0.23.36" }
+rustls-pki-types = { optional = true, version = "1.14.0" }
+tokio = { optional = true, version = "1.49.0" }
+tokio-rustls = { optional = true, version = "0.26.4" }
+wasmtime-wasi-http = { optional = true, version = "41.0.3", default-features = false }
+wasmtime-wasi-tls = { optional = true, version = "41.0.3" }
 
 [features]
-plugins = ["dep:wasmtime", "dep:wasmtime-wasi"]
+plugins = [
+    "dep:wasmtime",
+    "dep:wasmtime-wasi",
+    "dep:read-url",
+]
+
+plugins-http = [
+    "plugins",
+    "dep:wasmtime-wasi-http",
+    "dep:hyper",
+    "dep:http",
+    "dep:http-body-util",
+    "dep:rustls",
+    "dep:rustls-pki-types",
+    "dep:tokio",
+    "dep:tokio-rustls",
+]
+plugins-tls = [
+    "plugins",
+    "dep:wasmtime-wasi-tls",
+]
+plugins-http-platform = [
+    "plugins-http",
+    "kutil/tls-platform",
+]
+plugins-http-self-contained = [
+    "plugins-http",
+    "kutil/tls-self-contained",
+]
+
 wasm-debug = [
+    "wasmtime/debug", # requires gc
     "wasmtime/demangle",
     "wasmtime/profiling",
     "wasmtime/coredump",
     "wasmtime/addr2line",
     "wasmtime/debug-builtins",
 ]
+
+## Don't manually enable this!
+## It's for situations where we have all features enabled
+_blanket = ["kutil/_blanket"]
 
 # https://stackoverflow.com/a/61417700
 [package.metadata.docs.rs]

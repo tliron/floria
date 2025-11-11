@@ -56,7 +56,7 @@ impl GuestMapResource for Map {
         Self::from_iter(key_value_pairs)
     }
 
-    fn inner(&self) -> Vec<(Expression, Expression)> {
+    fn replica(&self) -> Vec<(Expression, Expression)> {
         self.inner.clone().into_iter().collect()
     }
 
@@ -75,7 +75,7 @@ impl FromIterator<(Expression, Expression)> for Map {
 }
 
 impl fmt::Display for Map {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_char('{')?;
 
         let mut iterator = self.inner.iter().peekable();

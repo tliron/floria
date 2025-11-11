@@ -1,10 +1,13 @@
 use super::super::super::{super::data::*, bindings::exports::floria::plugins::dispatch as bindings};
 
+use problemo::common::*;
+
 // Kind
 
 impl From<bindings::EntityKind> for EntityKind {
     fn from(kind: bindings::EntityKind) -> Self {
         match kind {
+            bindings::EntityKind::Plugin => Self::Plugin,
             bindings::EntityKind::Class => Self::Class,
             bindings::EntityKind::VertexTemplate => Self::VertexTemplate,
             bindings::EntityKind::EdgeTemplate => Self::EdgeTemplate,
@@ -17,6 +20,7 @@ impl From<bindings::EntityKind> for EntityKind {
 impl From<EntityKind> for bindings::EntityKind {
     fn from(kind: EntityKind) -> Self {
         match kind {
+            EntityKind::Plugin => Self::Plugin,
             EntityKind::Class => Self::Class,
             EntityKind::VertexTemplate => Self::VertexTemplate,
             EntityKind::EdgeTemplate => Self::EdgeTemplate,
@@ -50,10 +54,12 @@ impl From<CallKind> for bindings::CallKind {
 
 // ID
 
-impl From<bindings::Id> for ID {
-    fn from(id: bindings::Id) -> Self {
-        let directory = id.directory.into_iter().map(|segment| segment.into()).collect();
-        Self::new_for(id.kind.into(), directory, id.name.into())
+impl TryFrom<bindings::Id> for ID {
+    type Error = MalformedError;
+
+    fn try_from(id: bindings::Id) -> Result<Self, Self::Error> {
+        let directory = Directory::new(id.directory.into_iter().map(|segment| segment.into()).collect())?;
+        Self::new_with_name(id.kind.into(), directory, id.name.into())
     }
 }
 

@@ -10,6 +10,6 @@ pub fn displays_into_expressions<DisplayT>(
 ) where
     DisplayT: fmt::Display,
 {
-    let expressions: Vec<_> = displays.into_iter().map(|display| display.to_string().into()).collect();
+    let expressions: Vec<Expression> = displays.into_iter().map(|display| display.to_string().into()).collect();
     map.insert(key.into(), expressions.into());
 }

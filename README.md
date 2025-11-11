@@ -1,7 +1,7 @@
 *Work in progress, not ready for general use*
 
 [![crates.io](https://img.shields.io/crates/v/floria?color=%23227700)](https://crates.io/crates/floria)
-[![docs.rs](https://img.shields.io/badge/docs.rs-latest?color=grey)](https://docs.rs/floria/latest/floria/)
+[![docs.rs](https://img.shields.io/badge/docs.rs-latest?color=grey)](https://docs.rs/floria)
 
 Floria
 ======
@@ -28,7 +28,7 @@ Documentation
 
 * [Design Choices](https://floria.khutulun.org/documentation/design)
 * [Frequently Asked Questions](https://floria.khutulun.org/documentation/faq)
-* [floria API Documentation](https://docs.rs/floria/latest/floria/)
+* [floria API Documentation](https://docs.rs/floria)
 
 License
 -------

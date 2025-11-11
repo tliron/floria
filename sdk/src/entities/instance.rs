@@ -15,9 +15,22 @@ pub trait Instance: Metadata {
     /// Properties.
     fn properties(&self) -> &Vec<(String, floria_bindings::Property)>;
 
+    /// Properties.
+    fn properties_mut(&mut self) -> &mut Vec<(String, floria_bindings::Property)>;
+
     /// Property.
     fn property(&self, name: &str) -> Option<&floria_bindings::Property> {
         for (key, value) in self.properties() {
+            if key == name {
+                return Some(value);
+            }
+        }
+        None
+    }
+
+    /// Property.
+    fn property_mut(&mut self, name: &str) -> Option<&mut floria_bindings::Property> {
+        for (key, value) in self.properties_mut() {
             if key == name {
                 return Some(value);
             }

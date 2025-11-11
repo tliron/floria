@@ -3,8 +3,9 @@ mod class;
 mod dispatch;
 mod edge;
 mod edge_template;
-mod event_handler;
+mod events;
 mod instance;
+mod plugin;
 mod propagation;
 mod property;
 mod template;
@@ -16,6 +17,10 @@ mod vertex_template;
 
 #[allow(unused_imports)]
 pub use {
-    class::*, edge::*, edge_template::*, event_handler::*, instance::*, propagation::*, property::*, template::*,
+    class::*, edge::*, edge_template::*, events::*, instance::*, plugin::*, propagation::*, property::*, template::*,
     utils::*, vertex::*, vertex_finder::*, vertex_selector::*, vertex_template::*,
 };
+
+#[cfg(feature = "plugins")]
+#[allow(unused_imports)]
+pub use dispatch::*;

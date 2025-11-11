@@ -35,7 +35,7 @@ impl Default for Number {
 }
 
 impl fmt::Display for Number {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Integer(integer) => fmt::Display::fmt(integer, formatter),
             Self::UnsignedInteger(unsigned_integer) => fmt::Display::fmt(unsigned_integer, formatter),

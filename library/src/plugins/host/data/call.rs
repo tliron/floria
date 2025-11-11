@@ -1,13 +1,13 @@
 use super::super::{super::super::store::*, super::bindings::floria::plugins::floria as bindings, host::*};
 
-use wasmtime::component::*;
+use {std::mem::*, wasmtime::component::*};
 
 //
 // Call
 //
 
 /// Call.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Call {
     /// Plugin name.
     pub plugin: String,
@@ -53,11 +53,17 @@ where
         Ok(())
     }
 
-    fn inner(
+    fn take(
         &mut self,
         resource: Resource<Call>,
     ) -> wasmtime::Result<(String, String, Vec<bindings::Expression>, bindings::CallKind)> {
-        let call = self.resources.get(&resource)?;
-        Ok((call.plugin.clone(), call.function.clone(), call.arguments.clone(), call.kind))
+        let call = self.resources.get_mut(&resource)?;
+        Ok((take(&mut call.plugin), take(&mut call.function), take(&mut call.arguments), call.kind))
+    }
+}
+
+impl PartialEq for bindings::CallKind {
+    fn eq(&self, other: &Self) -> bool {
+        discriminant(self) == discriminant(other)
     }
 }

@@ -7,14 +7,14 @@ use super::super::{
     plugin::*,
 };
 
-use {anyhow::Context, std::collections::*};
+use {problemo::*, std::collections::*};
 
 impl<StoreT> DispatchPlugin<StoreT>
 where
     StoreT: Store,
 {
     /// Convert an [Expression] to a [bindings::Expression].
-    pub fn expression_to_bindings(&mut self, expression: Expression) -> Result<bindings::Expression, PluginError> {
+    pub fn expression_to_bindings(&mut self, expression: Expression) -> Result<bindings::Expression, Problem> {
         match expression {
             Expression::Undefined | Expression::Null => Ok(bindings::Expression::Null),
             Expression::Integer(integer) => Ok(bindings::Expression::Integer(integer)),
@@ -37,8 +37,7 @@ where
                     .floria_plugins_dispatch()
                     .list_resource()
                     .call_constructor(&mut self.host, &items)
-                    .context("calling list constructor")
-                    .map_err(PluginError::CallWasm)?;
+                    .into_wasm_call_problem("list constructor")?;
 
                 Ok(bindings::Expression::List(resource))
             }
@@ -54,8 +53,7 @@ where
                     .floria_plugins_dispatch()
                     .map_resource()
                     .call_constructor(&mut self.host, &key_value_pairs)
-                    .context("calling map constructor")
-                    .map_err(PluginError::CallWasm)?;
+                    .into_wasm_call_problem("map constructor")?;
 
                 Ok(bindings::Expression::Map(resource))
             }
@@ -68,8 +66,7 @@ where
                     .floria_plugins_dispatch()
                     .custom_resource()
                     .call_constructor(&mut self.host, &kind, &inner)
-                    .context("calling custom constructor")
-                    .map_err(PluginError::CallWasm)?;
+                    .into_wasm_call_problem("custom constructor")?;
 
                 Ok(bindings::Expression::Custom(resource))
             }
@@ -84,9 +81,14 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .call_resource()
-                    .call_constructor(&mut self.host, &call.plugin, &call.function, &arguments, call.kind.into())
-                    .context("calling call constructor")
-                    .map_err(PluginError::CallWasm)?;
+                    .call_constructor(
+                        &mut self.host,
+                        &call.function.plugin_id.to_string(),
+                        &call.function.name,
+                        &arguments,
+                        call.kind.into(),
+                    )
+                    .into_wasm_call_problem("call constructor")?;
 
                 Ok(bindings::Expression::Call(resource))
             }
@@ -94,7 +96,7 @@ where
     }
 
     /// Convert a [bindings::Expression] to an [Expression].
-    pub fn expression_from_bindings(&mut self, expression: bindings::Expression) -> Result<Expression, PluginError> {
+    pub fn expression_from_bindings(&mut self, expression: bindings::Expression) -> Result<Expression, Problem> {
         match expression {
             bindings::Expression::Null => Ok(Expression::Null),
             bindings::Expression::Integer(integer) => Ok(Expression::Integer(integer)),
@@ -111,14 +113,10 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .list_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling list inner")
-                    .map_err(PluginError::CallWasm)?;
+                    .call_replica(&mut self.host, resource)
+                    .into_wasm_call_problem("list.replica")?;
 
-                resource
-                    .resource_drop(&mut self.host)
-                    .context("dropping list resource")
-                    .map_err(PluginError::CallWasm)?;
+                resource.resource_drop(&mut self.host).into_wasm_resource_problem("drop list")?;
 
                 let mut list = Vec::with_capacity(items.len());
                 for item in items {
@@ -133,14 +131,10 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .map_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling map inner")
-                    .map_err(PluginError::CallWasm)?;
+                    .call_replica(&mut self.host, resource)
+                    .into_wasm_call_problem("map.replica")?;
 
-                resource
-                    .resource_drop(&mut self.host)
-                    .context("dropping map resource")
-                    .map_err(PluginError::CallWasm)?;
+                resource.resource_drop(&mut self.host).into_wasm_resource_problem("drop map")?;
 
                 let mut map = BTreeMap::default();
                 for (key, value) in key_value_pairs {
@@ -155,14 +149,10 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .custom_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling custom inner")
-                    .map_err(PluginError::CallWasm)?;
+                    .call_replica(&mut self.host, resource)
+                    .into_wasm_call_problem("custom.replica")?;
 
-                resource
-                    .resource_drop(&mut self.host)
-                    .context("dropping custom resource")
-                    .map_err(PluginError::CallWasm)?;
+                resource.resource_drop(&mut self.host).into_wasm_resource_problem("drop custom")?;
 
                 let inner = self.expression_from_bindings(inner)?;
                 Ok(Expression::Custom(kind.into(), inner.into()))
@@ -173,21 +163,18 @@ where
                     .bindings
                     .floria_plugins_dispatch()
                     .call_resource()
-                    .call_inner(&mut self.host, resource)
-                    .context("calling call inner")
-                    .map_err(PluginError::CallWasm)?;
+                    .call_replica(&mut self.host, resource)
+                    .into_wasm_call_problem("call.replica")?;
 
-                resource
-                    .resource_drop(&mut self.host)
-                    .context("dropping call resource")
-                    .map_err(PluginError::CallWasm)?;
+                resource.resource_drop(&mut self.host).into_wasm_resource_problem("drop call")?;
 
                 let mut expressions = Vec::with_capacity(arguments.len());
                 for argument in arguments {
                     expressions.push(self.expression_from_bindings(argument)?);
                 }
 
-                Ok(Call::new(plugin.into(), function.into(), expressions, kind.into()).into())
+                Ok(Call::new(ID::parse(EntityKind::Plugin, &plugin)?, function.into(), expressions, kind.into())?
+                    .into())
             }
         }
     }

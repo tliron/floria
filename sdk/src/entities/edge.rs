@@ -5,8 +5,8 @@ use super::{
 };
 
 impl Metadata for floria_bindings::Edge {
-    fn metadata(&self) -> Vec<(floria_bindings::Expression, floria_bindings::Expression)> {
-        self.metadata.inner()
+    fn metadata(&self) -> &floria_bindings::MapResource {
+        &self.metadata
     }
 
     fn class_ids(&self) -> &Vec<floria_bindings::Id> {
@@ -21,5 +21,9 @@ impl Instance for floria_bindings::Edge {
 
     fn properties(&self) -> &Vec<(String, floria_bindings::Property)> {
         &self.properties
+    }
+
+    fn properties_mut(&mut self) -> &mut Vec<(String, floria_bindings::Property)> {
+        &mut self.properties
     }
 }

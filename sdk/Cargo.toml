@@ -4,7 +4,7 @@ edition = "2024"
 name = "floria-plugin-sdk"
 description = "Floria plugin SDK"
 version = "0.0.5"
-rust-version = "1.91"
+rust-version = "1.93"
 
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tliron/floria"
@@ -13,7 +13,7 @@ authors = ["Tal Liron"]
 
 readme = "../README.md"
 
-categories = [] # https://crates.io/category_slugs
+categories = ["wasm"] # https://crates.io/category_slugs
 keywords = [
     "cloud",
     "orchestration",
@@ -26,7 +26,12 @@ keywords = [
 duplicate = "2.0.1"
 num-traits = "0.2.19"
 ordered-float = "5.1.0"
-wit-bindgen = "0.47.0"
+serde = { optional = true, version = "1.0.228", features = ["derive"] }
+waki = "0.5.1"
+wit-bindgen = "0.52.0"
+
+[features]
+serde = ["dep:serde"]
 
 # https://stackoverflow.com/a/61417700
 [package.metadata.docs.rs]
