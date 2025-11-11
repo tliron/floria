@@ -3,6 +3,8 @@ use super::{
     errors::*,
 };
 
+use kutil::std::immutable::*;
+
 //
 // Store
 //
@@ -14,6 +16,15 @@ use super::{
 pub trait Store {
     /// Create ID.
     fn create_id(&self, id: &mut ID) -> Result<(), StoreError>;
+
+    /// Get plugin.
+    fn get_plugin(&self, id: &ID) -> Result<Option<Plugin>, StoreError>;
+
+    /// Get plugin by URL.
+    fn get_plugin_by_url(&self, url: &ByteString) -> Result<Option<Plugin>, StoreError>;
+
+    /// Add plugin.
+    fn add_plugin(&self, plugin: Plugin) -> Result<(), StoreError>;
 
     /// Get class.
     fn get_class(&self, id: &ID) -> Result<Option<Class>, StoreError>;
@@ -63,19 +74,20 @@ pub trait StoreUtilities {
 
 impl<StoreT> StoreUtilities for StoreT
 where
-    StoreT: Store,
+    StoreT: Clone + Store,
 {
     fn get_entity_as_expression(&self, id: &ID) -> Result<Option<Expression>, StoreError> {
         let variant = match id.kind {
+            EntityKind::Plugin => self.get_plugin(&id)?.map(|plugin| Ok(plugin.into())),
             EntityKind::Class => self.get_class(&id)?.map(|class| Ok(class.into())),
-            EntityKind::VertexTemplate => {
-                self.get_vertex_template(&id)?.map(|vertex_template| vertex_template.into_expression(false, self))
-            }
+            EntityKind::VertexTemplate => self
+                .get_vertex_template(&id)?
+                .map(|vertex_template| vertex_template.into_expression(false, self.clone())),
             EntityKind::EdgeTemplate => {
-                self.get_edge_template(&id)?.map(|edge_template| edge_template.into_expression(false, self))
+                self.get_edge_template(&id)?.map(|edge_template| edge_template.into_expression(false, self.clone()))
             }
-            EntityKind::Vertex => self.get_vertex(&id)?.map(|vertex| vertex.into_expression(false, self)),
-            EntityKind::Edge => self.get_edge(&id)?.map(|edge| edge.into_expression(false, self)),
+            EntityKind::Vertex => self.get_vertex(&id)?.map(|vertex| vertex.into_expression(false, self.clone())),
+            EntityKind::Edge => self.get_edge(&id)?.map(|edge| edge.into_expression(false, self.clone())),
         };
 
         Ok(match variant {

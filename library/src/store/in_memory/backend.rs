@@ -10,6 +10,7 @@ use kutil::std::collections::*;
 #[derive(Default)]
 pub struct InMemoryStoreBackend {
     pub(crate) next_id: FastConcurrentHashMap<EntityKind, u64>,
+    pub(crate) plugins: FastConcurrentHashMap<ID, Plugin>,
     pub(crate) classes: FastConcurrentHashMap<ID, Class>,
     pub(crate) vertex_templates: FastConcurrentHashMap<ID, VertexTemplate>,
     pub(crate) edge_templates: FastConcurrentHashMap<ID, EdgeTemplate>,

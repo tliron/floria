@@ -1,7 +1,8 @@
 use super::{
-    super::{data::*, store::*},
+    super::{data::*, errors::*, store::*},
     instance::*,
     utils::*,
+    vertex_template::*,
 };
 
 use {
@@ -35,24 +36,9 @@ pub struct Vertex {
 
 impl Vertex {
     /// Constructor.
-    pub fn new<StoreT>(directory: Directory, origin_template_id: ID, store: &StoreT) -> Result<Self, StoreError>
-    where
-        StoreT: Store,
-    {
-        let mut id = ID::new(EntityKind::Vertex, directory);
-        store.create_id(&mut id)?;
-        Ok(Self::new_with(id, Some(origin_template_id)))
-    }
-
-    /// Constructor.
-    pub fn new_for(directory: Directory, id: ByteString, origin_template_id: Option<ID>) -> Self {
-        Self::new_with(ID::new_for(EntityKind::Vertex, directory, id), origin_template_id)
-    }
-
-    /// Constructor.
-    pub fn new_with(id: ID, origin_template_id: Option<ID>) -> Self {
+    pub fn new(id: ID, origin_template_id: Option<ID>) -> Self {
         Self {
-            instance: Instance::new_with(id, origin_template_id),
+            instance: Instance::new(id, origin_template_id),
             containing_vertex_id: None,
             contained_vertex_ids: Default::default(),
             outgoing_edge_ids: Default::default(),
@@ -60,14 +46,56 @@ impl Vertex {
         }
     }
 
-    /// Into expression.
-    pub fn into_expression<'own, StoreT>(self, embedded: bool, store: &'own StoreT) -> Result<Expression, StoreError>
+    /// Constructor.
+    pub fn new_with_name(
+        directory: Directory,
+        name: ByteString,
+        origin_template_id: Option<ID>,
+    ) -> Result<Self, MalformedError> {
+        let id = ID::new_with_name(EntityKind::Vertex, directory, name)?;
+        Ok(Self::new(id, origin_template_id))
+    }
+
+    /// Constructor.
+    pub fn new_create_id<StoreT>(
+        directory: Directory,
+        origin_template_id: ID,
+        store: StoreT,
+    ) -> Result<Self, StoreError>
     where
         StoreT: Store,
     {
+        let id = ID::new(EntityKind::Vertex, directory, store)?;
+        Ok(Self::new(id, Some(origin_template_id)))
+    }
+
+    /// Constructor.
+    pub fn new_from_template<StoreT>(
+        directory: &Directory,
+        vertex_template: &VertexTemplate,
+        containing_vertex_id: Option<ID>,
+        store: StoreT,
+    ) -> Result<Self, StoreError>
+    where
+        StoreT: Store,
+    {
+        Ok(Vertex {
+            instance: Instance::new_from_template(&vertex_template.template, EntityKind::Vertex, directory, store)?,
+            containing_vertex_id: containing_vertex_id,
+            contained_vertex_ids: Vec::with_capacity(vertex_template.contained_vertex_template_ids.len()),
+            outgoing_edge_ids: Default::default(),
+            incoming_edge_ids: Default::default(),
+        })
+    }
+
+    /// Into expression.
+    pub fn into_expression<StoreT>(self, embedded: bool, store: StoreT) -> Result<Expression, StoreError>
+    where
+        StoreT: Clone + Store,
+    {
         let mut map = BTreeMap::default();
 
-        self.instance.into_expression(&mut map, embedded, store)?;
+        self.instance.into_expression(&mut map, embedded, store.clone())?;
 
         if !embedded {
             if let Some(containing_vertex_id) = &self.containing_vertex_id {
@@ -80,7 +108,7 @@ impl Vertex {
                 let mut contained_vertexes = Vec::with_capacity(self.contained_vertex_ids.len());
                 for contained_vertex_id in &self.contained_vertex_ids {
                     match store.get_vertex(contained_vertex_id)? {
-                        Some(vertex) => contained_vertexes.push(vertex.into_expression(embedded, store)?),
+                        Some(vertex) => contained_vertexes.push(vertex.into_expression(embedded, store.clone())?),
                         None => {}
                     }
                 }
@@ -95,7 +123,7 @@ impl Vertex {
                 let mut outgoing_edges = Vec::with_capacity(self.outgoing_edge_ids.len());
                 for outgoing_edge_id in &self.outgoing_edge_ids {
                     if let Some(edge) = store.get_edge(outgoing_edge_id)? {
-                        outgoing_edges.push(edge.into_expression(embedded, store)?);
+                        outgoing_edges.push(edge.into_expression(embedded, store.clone())?);
                     }
                 }
                 map.insert("outgoing-edges".into(), outgoing_edges.into());
@@ -111,8 +139,8 @@ impl Vertex {
         Ok(Expression::Map(map))
     }
 
-    /// To [Depict].
-    pub fn to_depict<'own, StoreT>(&'own self, store: &'own StoreT) -> DepictVertex<'own, StoreT>
+    /// As [Depict].
+    pub fn as_depict<'own, StoreT>(&'own self, store: &'own StoreT) -> DepictVertex<'own, StoreT>
     where
         StoreT: Store,
     {
@@ -149,6 +177,7 @@ where
         depict_metadata(&self.vertex.instance.metadata, false, writer, context)?;
         depict_classes(&self.vertex.instance.class_ids, self.store, writer, context)?;
         depict_properties("properties", &self.vertex.instance.properties, self.store, false, writer, context)?;
+        depict_event_handlers("event_handlers", &self.vertex.instance.event_handlers, false, writer, context)?;
 
         utils::depict_field("contained_vertexes", false, writer, context, |writer, context| -> io::Result<()> {
             if self.vertex.contained_vertex_ids.is_empty() {
@@ -160,7 +189,7 @@ where
                     match self.store.get_vertex(vertex_id).map_err(io::Error::other)? {
                         Some(vertex) => {
                             vertex
-                                .to_depict(self.store)
+                                .as_depict(self.store)
                                 .depict(writer, &context.child().increase_indentation_thick_branch(last))?;
                         }
 
@@ -183,7 +212,7 @@ where
                     context.indent_into_thick_branch(writer, last)?;
                     match self.store.get_edge(edge_id).map_err(io::Error::other)? {
                         Some(edge) => {
-                            edge.to_depict(self.store)
+                            edge.as_depict(self.store)
                                 .depict(writer, &context.child().increase_indentation_thick_branch(last))?;
                         }
 

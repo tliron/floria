@@ -39,8 +39,8 @@ impl GuestListResource for List {
         Self::from(list)
     }
 
-    fn inner(&self) -> Vec<Expression> {
-        self.clone().inner
+    fn replica(&self) -> Vec<Expression> {
+        self.inner.clone()
     }
 
     fn length(&self) -> u64 {

@@ -24,12 +24,16 @@ https://github.com/libui-ng/libui-ng
 Rust GUI
 ========
 
+https://ribir.org/ https://github.com/RibirX/Ribir
 https://github.com/linebender/xilem (React-inspired)
 https://github.com/marc2332/freya (React-inspired)
 https://github.com/emilk/egui (immediate mode)
 
 Wasm Plugins
 ============
+
+Async!
+https://docs.wasmtime.dev/api/wasmtime/component/bindgen_examples/_7_async/index.html
 
 https://www.assemblyscript.org/
 https://component-model.bytecodealliance.org/language-support/python.html
@@ -65,6 +69,9 @@ Rust
 source-available, but not open source
 
 https://github.com/helixdb/helix-db
+
+https://github.com/memgraph/memgraph
+https://memgraph.com/
 
 https://age.apache.org/
 On top of postgres

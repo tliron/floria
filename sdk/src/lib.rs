@@ -29,7 +29,7 @@ pub mod utils;
 #[allow(unused_imports)]
 pub use {
     bindings::{
-        export_dispatcher, exports::floria::plugins::dispatch as dispatch_bindings,
+        export_dispatch, exports::floria::plugins::dispatch as dispatch_bindings,
         floria::plugins::floria as floria_bindings,
     },
     plugin::*,

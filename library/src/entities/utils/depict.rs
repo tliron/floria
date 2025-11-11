@@ -1,13 +1,10 @@
 use super::super::{
     super::{data::*, store::*},
+    events::*,
     property::*,
 };
 
-use {
-    depiction::*,
-    kutil::std::{immutable::*, iter::*},
-    std::{collections::*, io},
-};
+use {depiction::*, kutil::std::iter::*, std::io};
 
 /// Depict metadata.
 pub fn depict_metadata<WriteT>(
@@ -49,7 +46,7 @@ where
 /// Depict properties.
 pub fn depict_properties<'own, StoreT, WriteT>(
     name: &str,
-    properties: &BTreeMap<ByteString, Property>,
+    properties: &Properties,
     store: &'own StoreT,
     last: bool,
     writer: &mut WriteT,
@@ -68,7 +65,39 @@ where
                 context.indent_into_branch(writer, last)?;
                 context.theme.write_meta(writer, name)?;
                 context.theme.write_delimiter(writer, ':')?;
-                property.to_depict(store).depict(writer, &context.child().increase_indentation_branch(last))?;
+                property.as_depict(store).depict(writer, &context.child().increase_indentation_branch(last))?;
+            }
+        }
+
+        Ok(())
+    })
+}
+
+/// Depict event handlers.
+pub fn depict_event_handlers<'own, WriteT>(
+    name: &str,
+    event_handlers: &EventHandlers,
+    last: bool,
+    writer: &mut WriteT,
+    context: &DepictionContext,
+) -> io::Result<()>
+where
+    WriteT: io::Write,
+{
+    utils::depict_field(name, last, writer, context, |writer, context| -> io::Result<()> {
+        if event_handlers.is_empty() {
+            context.separate(writer)?;
+            context.theme.write_delimiter(writer, "{}")?;
+        } else {
+            for ((name, event_handlers), last) in IterateWithLast::new(event_handlers) {
+                context.indent_into_branch(writer, last)?;
+                context.theme.write_meta(writer, name)?;
+                context.theme.write_delimiter(writer, ':')?;
+                let child_context = &context.child().increase_indentation_branch(last);
+                for event_handler in event_handlers {
+                    child_context.indent_into(writer, utils::DEPICT_INTO_LIST_ITEM)?;
+                    event_handler.depict(writer, child_context)?;
+                }
             }
         }
 
@@ -97,7 +126,7 @@ where
                 match store.get_class(class_id).map_err(io::Error::other)? {
                     Some(class) => {
                         class
-                            .to_depict(store)
+                            .as_depict(store)
                             .depict(writer, &context.child().increase_indentation_double_branch(last))?;
                     }
 

@@ -3,14 +3,14 @@ use super::super::{
     host::*,
 };
 
-use wasmtime::component::*;
+use {std::mem::*, wasmtime::component::*};
 
 //
 // Custom
 //
 
 /// Custom.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Custom {
     /// Kind.
     pub kind: String,
@@ -39,8 +39,8 @@ where
         Ok(())
     }
 
-    fn inner(&mut self, resource: Resource<Custom>) -> wasmtime::Result<(String, bindings::Expression)> {
-        let custom = self.resources.get(&resource)?;
-        Ok((custom.kind.clone(), custom.inner.clone()))
+    fn take(&mut self, resource: Resource<Custom>) -> wasmtime::Result<(String, bindings::Expression)> {
+        let custom = self.resources.get_mut(&resource)?;
+        Ok((take(&mut custom.kind), take(&mut custom.inner)))
     }
 }

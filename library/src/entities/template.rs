@@ -1,12 +1,11 @@
 use super::{
     super::{data::*, store::*},
     class::*,
-    event_handler::*,
-    instance::*,
+    events::*,
     property::*,
 };
 
-use {kutil::std::immutable::*, std::collections::*};
+use std::collections::*;
 
 //
 // Template
@@ -25,10 +24,21 @@ pub struct Template {
     pub class_ids: Vec<ID>,
 
     /// Property templates.
-    pub property_templates: BTreeMap<ByteString, Property>,
+    pub property_templates: Properties,
 
     /// Event handlers.
-    pub event_handlers: Vec<EventHandler>,
+    ///
+    /// TODO: return value to affect propagation?
+    pub event_handlers: EventHandlers,
+
+    /// Instantiation event handlers.
+    ///
+    /// "prepare": before
+    ///
+    /// "instantiate": after
+    ///
+    /// If any returns false then instantiation is cancelled.
+    pub instantiation_event_handlers: EventHandlers,
 }
 
 impl Template {
@@ -40,46 +50,27 @@ impl Template {
             class_ids: Default::default(),
             property_templates: Default::default(),
             event_handlers: Default::default(),
+            instantiation_event_handlers: Default::default(),
         }
     }
 
     /// Into expression.
-    pub fn into_expression<'own, StoreT>(
+    pub fn into_expression<StoreT>(
         self,
         map: &mut BTreeMap<Expression, Expression>,
         embedded: bool,
-        store: &'own StoreT,
+        store: StoreT,
     ) -> Result<(), StoreError>
     where
-        StoreT: Store,
+        StoreT: Clone + Store,
     {
         map.insert("kind".into(), self.id.kind.as_str().into());
         map.insert("id".into(), self.id.to_string().into());
         map.insert("metadata".into(), metadata_into_expression(self.metadata));
-        classes_into_expression(store, map, embedded, self.class_ids)?;
+        classes_into_expression(store.clone(), map, embedded, self.class_ids)?;
         properties_into_expression(store, map, "property-templates", embedded, self.property_templates)?;
+        event_handlers_into_expression(map, self.event_handlers);
 
         Ok(())
-    }
-
-    /// Instantiate.
-    pub fn instantiate<StoreT>(
-        &self,
-        kind: EntityKind,
-        directory: &Directory,
-        store: &StoreT,
-    ) -> Result<Instance, StoreError>
-    where
-        StoreT: Store,
-    {
-        let mut id = ID::new(kind, directory.clone());
-        store.create_id(&mut id)?;
-
-        let mut instance = Instance::new_with(id, Some(self.id.clone()));
-        instance.metadata = self.metadata.clone();
-        instance.class_ids = self.class_ids.clone();
-        instance.properties = self.property_templates.clone();
-
-        Ok(instance)
     }
 }

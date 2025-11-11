@@ -42,7 +42,7 @@ pub struct Call {
 impl Call {
     /// Dispatch.
     pub fn dispatch(&self, call_site: &CallSite) -> DispatchResult {
-        let (name, dispatcher) = registered_dispatcher_plugin()?;
+        let (name, dispatcher) = registered_dispatch_plugin()?;
         if self.plugin == name {
             dispatcher(self.function.clone(), self.arguments.clone(), call_site.clone())
         } else {
@@ -56,7 +56,7 @@ impl GuestCallResource for Call {
         Self { plugin, function, arguments, kind }
     }
 
-    fn inner(&self) -> (String, String, Vec<Expression>, CallKind) {
+    fn replica(&self) -> (String, String, Vec<Expression>, CallKind) {
         (self.plugin.clone(), self.function.clone(), self.arguments.clone(), self.kind)
     }
 }

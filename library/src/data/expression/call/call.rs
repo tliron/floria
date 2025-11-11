@@ -1,4 +1,10 @@
-use super::{super::expression::*, kind::*};
+use super::{
+    super::{
+        super::{super::errors::MalformedError, function::*, id::*},
+        expression::*,
+    },
+    kind::*,
+};
 
 use {
     compris::normal::*,
@@ -14,11 +20,8 @@ use {
 /// Call.
 #[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Call {
-    /// Plugin name.
-    pub plugin: ByteString,
-
-    /// Function name.
-    pub function: ByteString,
+    /// Function.
+    pub function: FunctionName,
 
     /// Arguments.
     pub arguments: Vec<Expression>,
@@ -29,8 +32,25 @@ pub struct Call {
 
 impl Call {
     /// Constructor.
-    pub fn new(plugin: ByteString, function: ByteString, arguments: Vec<Expression>, kind: CallKind) -> Self {
-        Self { plugin, function, arguments, kind }
+    pub fn new(
+        plugin_id: ID,
+        function: ByteString,
+        arguments: Vec<Expression>,
+        kind: CallKind,
+    ) -> Result<Self, MalformedError> {
+        Ok(Self { function: FunctionName::new(plugin_id, function)?, arguments, kind })
+    }
+}
+
+impl IntoDepictionMarkup for Call {
+    fn into_depiction_markup(self) -> String {
+        let arguments: Vec<String> =
+            self.arguments.into_iter().map(|argument| argument.into_depiction_markup()).collect();
+        format!(
+            "{}|delimiter|(|{}|delimiter|)|",
+            self.function.into_depiction_markup(),
+            arguments.join("|delimiter|,|")
+        )
     }
 }
 
@@ -47,9 +67,7 @@ impl Depict for Call {
             _ => {}
         }
 
-        context.theme.write_name(writer, &self.plugin)?;
-        context.theme.write_delimiter(writer, ':')?;
-        context.theme.write_name(writer, &self.function)?;
+        self.function.depict(writer, context)?;
         context.theme.write_delimiter(writer, '(')?;
 
         let child_context = &context.child().with_format(DepictionFormat::Compact).with_separator(false);
@@ -72,7 +90,7 @@ impl fmt::Display for Call {
             _ => {}
         }
 
-        write!(formatter, "{}:{}(", self.plugin, self.function)?;
+        write!(formatter, "{}(", self.function)?;
 
         for (argument, last) in IterateWithLast::new(&self.arguments) {
             fmt::Display::fmt(argument, formatter)?;
@@ -94,8 +112,8 @@ where
     fn into(self) -> Variant<AnnotatedT> {
         let mut map = Map::default();
 
-        map.into_insert("$plugin", self.plugin);
-        map.into_insert("$function", self.function);
+        map.into_insert("$plugin", self.function.plugin_id.to_string());
+        map.into_insert("$function", self.function.name);
 
         if !self.arguments.is_empty() {
             let arguments: List<AnnotatedT> = self.arguments.into_iter().map(|argument| argument.into()).collect();

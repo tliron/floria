@@ -1,6 +1,9 @@
-use super::super::{super::store::*, library::*};
+use super::super::{
+    super::{data::*, store::*},
+    context::*,
+};
 
-use {kutil::std::immutable::*, wasmtime_wasi::*};
+use wasmtime_wasi::*;
 
 //
 // PluginHost
@@ -11,14 +14,22 @@ pub struct PluginHost<StoreT>
 where
     StoreT: 'static + Store,
 {
-    /// Name.
-    pub name: ByteString,
+    /// Plugin ID.
+    pub id: ID,
 
-    /// Library.
-    pub library: Library<StoreT>,
+    /// Plugin context.
+    pub context: PluginContext<StoreT>,
 
     /// WASI context.
     pub wasi: WasiCtx,
+
+    /// WASI HTTP context.
+    #[cfg(feature = "plugins-http")]
+    pub wasi_http: wasmtime_wasi_http::WasiHttpCtx,
+
+    /// WASI TLS context.
+    #[cfg(feature = "plugins-tls")]
+    pub wasi_tls: wasmtime_wasi_tls::WasiTlsCtx,
 
     /// Resources.
     pub resources: ResourceTable,
@@ -29,11 +40,20 @@ where
     StoreT: Store,
 {
     /// Constructor.
-    pub fn new(name: ByteString, library: Library<StoreT>) -> Self {
+    pub fn new(id: ID, context: PluginContext<StoreT>) -> Self {
         Self {
-            name,
-            library,
-            wasi: WasiCtxBuilder::new().inherit_stdout().inherit_stderr().build(),
+            id,
+            context,
+            wasi: WasiCtxBuilder::new()
+                .inherit_stdout()
+                .inherit_stderr()
+                .inherit_network()
+                .allow_ip_name_lookup(true)
+                .build(),
+            #[cfg(feature = "plugins-http")]
+            wasi_http: wasmtime_wasi_http::WasiHttpCtx::new(),
+            #[cfg(feature = "plugins-tls")]
+            wasi_tls: wasmtime_wasi_tls::WasiTlsCtxBuilder::new().build(),
             resources: ResourceTable::default(),
         }
     }
