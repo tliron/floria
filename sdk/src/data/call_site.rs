@@ -1,4 +1,4 @@
-use super::super::{dispatch_bindings::*, entities::*, *};
+use super::super::{dispatch_bindings::*, *};
 
 use std::fmt;
 
@@ -22,13 +22,13 @@ impl CallSite {
         })
     }
 
-    /// Property metadata string.
-    pub fn property_metadata_string(&self, key: &str) -> Result<Option<String>, DispatchError> {
-        Ok(match &self.property {
-            Some(property) => self.entity()?.property(property).and_then(|property| property.metadata_string(key)),
-            None => None,
-        })
-    }
+    // /// Property metadata string.
+    // pub fn property_metadata_string(&self, key: &str) -> Result<Option<String>, DispatchError> {
+    //     Ok(match &self.property {
+    //         Some(property) => self.entity()?.property(property).and_then(|property| property.metadata_string(key)),
+    //         None => None,
+    //     })
+    // }
 
     // /// Property metadata map.
     // pub fn property_metadata_map(&self, name: &str) -> Result<Option<Map>, String> {
@@ -44,7 +44,7 @@ impl CallSite {
 }
 
 impl fmt::Display for CallSite {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.id, formatter)?;
         if let Some(property) = &self.property {
             write!(formatter, ".{}", property)?;

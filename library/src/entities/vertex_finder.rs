@@ -43,9 +43,9 @@ impl Into<Expression> for VertexFinder {
         let mut map = BTreeMap::default();
 
         if let Some(directories) = self.directories {
-            let mut directories_list = Vec::with_capacity(directories.len());
+            let mut directories_list = Vec::<Expression>::with_capacity(directories.len());
             for directory in directories {
-                let directory: Vec<_> = directory.into_iter().map(|segment| segment.into()).collect();
+                let directory: Vec<Expression> = directory.into_iter().map(|segment| segment.into()).collect();
                 directories_list.push(directory.into());
             }
             map.insert("directories".into(), directories_list.into());

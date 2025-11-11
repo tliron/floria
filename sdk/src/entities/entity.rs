@@ -12,6 +12,11 @@ impl floria_bindings::Entity {
         }
     }
 
+    /// Property.
+    pub fn must_property(&self, name: &str) -> Result<&floria_bindings::Property, DispatchError> {
+        self.property(name).ok_or_else(|| format!("missing |meta|property|: |error|{}|", escape_depiction_markup(name)))
+    }
+
     /// Kind.
     pub fn kind(&self) -> EntityKind {
         match self {

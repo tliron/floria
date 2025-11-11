@@ -1,9 +1,14 @@
 use super::{call::*, expression::*};
 
-use {duplicate::*, kutil::std::immutable::*, ordered_float::*, std::collections::*};
+use {
+    duplicate::*,
+    kutil::std::immutable::*,
+    ordered_float::*,
+    std::{borrow::*, collections::*},
+};
 
 #[duplicate_item(
-  FromT                              Kind;
+  FromT                              Variant;
   [i64]                              [Integer];
   [u64]                              [UnsignedInteger];
   [OrderedFloat<f64>]                [Float];
@@ -18,7 +23,7 @@ use {duplicate::*, kutil::std::immutable::*, ordered_float::*, std::collections:
 )]
 impl From<FromT> for Expression {
     fn from(value: FromT) -> Self {
-        Self::Kind(value.into())
+        Self::Variant(value.into())
     }
 }
 
@@ -28,8 +33,23 @@ impl From<&'static str> for Expression {
     }
 }
 
+impl From<Cow<'_, str>> for Expression {
+    fn from(value: Cow<'_, str>) -> Self {
+        match value {
+            Cow::Borrowed(string) => ByteString::from(string).into(),
+            Cow::Owned(string) => string.into(),
+        }
+    }
+}
+
 impl From<&'static [u8]> for Expression {
     fn from(value: &'static [u8]) -> Self {
         Self::Blob(Bytes::from_static(value))
+    }
+}
+
+impl From<Vec<u8>> for Expression {
+    fn from(value: Vec<u8>) -> Self {
+        Self::Blob(value.into())
     }
 }

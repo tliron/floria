@@ -6,6 +6,7 @@ impl EntityKind {
     /// As string.
     pub fn as_str(&self) -> &'static str {
         match self {
+            Self::Plugin => "Plugin",
             Self::Class => "Class",
             Self::VertexTemplate => "VertexTemplate",
             Self::EdgeTemplate => "EdgeTemplate",
@@ -24,7 +25,7 @@ impl EntityKind {
 }
 
 impl fmt::Display for EntityKind {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(self.as_str(), formatter)
     }
 }

@@ -4,7 +4,7 @@ pub use super::super::super::bindings::exports::floria::plugins::dispatch::CallS
 
 use {
     depiction::*,
-    std::{fmt, io},
+    std::{cmp::*, fmt, io},
 };
 
 impl CallSite {
@@ -21,14 +21,14 @@ impl Depict for CallSite {
     {
         context.separate(writer)?;
 
-        let id: ID = self.id.clone().into();
+        let id: ID = self.id.clone().try_into().map_err(io::Error::other)?;
         id.kind.depict(writer, context)?;
-        id.depict(writer, &context.child().with_separator(true))?;
+        context.separate(writer)?;
+        id.depict(writer, context)?;
 
         if let Some(property) = &self.property {
+            context.separate(writer)?;
             context.theme.write_meta(writer, property)?;
-        } else {
-            context.theme.write_meta(writer, "no property")?;
         }
 
         Ok(())
@@ -36,12 +36,37 @@ impl Depict for CallSite {
 }
 
 impl fmt::Display for CallSite {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let id: ID = self.id.clone().into();
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        let id: ID = self.id.clone().try_into().map_err(|_| fmt::Error)?;
         fmt::Display::fmt(&id, formatter)?;
         if let Some(property) = &self.property {
             write!(formatter, ".{}", property)?;
         }
         Ok(())
+    }
+}
+
+impl PartialEq for CallSite {
+    fn eq(&self, other: &Self) -> bool {
+        (self.id == other.id) && (self.property == other.property)
+    }
+}
+
+impl Eq for CallSite {}
+
+impl PartialOrd for CallSite {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for CallSite {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.id.cmp(&other.id) {
+            Ordering::Equal => {}
+            ordering => return ordering,
+        }
+
+        self.property.cmp(&other.property)
     }
 }

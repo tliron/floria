@@ -1,11 +1,13 @@
 use super::{
     super::{data::*, store::*},
+    edge_template::*,
     instance::*,
     utils::*,
 };
 
 use {
     depiction::*,
+    problemo::*,
     std::{collections::*, io},
 };
 
@@ -27,10 +29,28 @@ pub struct Edge {
 }
 
 impl Edge {
-    /// Into expression.
-    pub fn into_expression<'own, StoreT>(self, embedded: bool, store: &'own StoreT) -> Result<Expression, StoreError>
+    /// Constructor.
+    pub fn new_from_template<StoreT>(
+        directory: &Directory,
+        edge_template: &EdgeTemplate,
+        source_vertex_id: ID,
+        target_vertex_id: ID,
+        store: StoreT,
+    ) -> Result<Self, Problem>
     where
-        StoreT: Store,
+        StoreT: Clone + Store,
+    {
+        Ok(Self {
+            instance: Instance::new_from_template(&edge_template.template, EntityKind::Edge, directory, store.clone())?,
+            source_vertex_id,
+            target_vertex_id,
+        })
+    }
+
+    /// Into expression.
+    pub fn into_expression<StoreT>(self, embedded: bool, store: StoreT) -> Result<Expression, Problem>
+    where
+        StoreT: Clone + Store,
     {
         let mut map = BTreeMap::default();
 
@@ -45,9 +65,11 @@ impl Edge {
         Ok(map.into())
     }
 
-    /// To [Depict].
-    pub fn to_depict<'own, StoreT>(&'own self, store: &'own StoreT) -> DepictEdge<'own, StoreT>
+    /// As [Depict].
+    pub fn as_depict<'this, 'store, 'depict, StoreT>(&'this self, store: &'store StoreT) -> DepictEdge<'depict, StoreT>
     where
+        'this: 'depict,
+        'store: 'depict,
         StoreT: Store,
     {
         DepictEdge { edge: self, store }
@@ -59,15 +81,15 @@ impl Edge {
 //
 
 /// Depict edge.
-pub struct DepictEdge<'own, StoreT>
+pub struct DepictEdge<'inner, StoreT>
 where
     StoreT: Store,
 {
-    edge: &'own Edge,
-    store: &'own StoreT,
+    edge: &'inner Edge,
+    store: &'inner StoreT,
 }
 
-impl<'own, StoreT> Depict for DepictEdge<'own, StoreT>
+impl<'inner, StoreT> Depict for DepictEdge<'inner, StoreT>
 where
     StoreT: Store,
 {
@@ -81,6 +103,7 @@ where
         depict_metadata(&self.edge.instance.metadata, false, writer, context)?;
         depict_classes(&self.edge.instance.class_ids, self.store, writer, context)?;
         depict_properties("properties", &self.edge.instance.properties, self.store, false, writer, context)?;
+        depict_event_handlers("event_handlers", &self.edge.instance.event_handlers, false, writer, context)?;
         depict_id("target_vertex_id", Some(&self.edge.target_vertex_id), true, writer, context)
     }
 }

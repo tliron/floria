@@ -1,8 +1,10 @@
 use super::super::{super::data::*, bindings::exports::floria::plugins::dispatch};
 
 use {
-    depiction::*,
-    std::{error::*, fmt, io},
+    depiction::{markup::*, *},
+    derive_more::*,
+    problemo::{common::*, *},
+    std::{fmt, io},
 };
 
 //
@@ -10,10 +12,10 @@ use {
 //
 
 /// Dispatch error.
-#[derive(Debug)]
+#[derive(Debug, Error, PartialEq)]
 pub struct DispatchError {
     /// Message. Expects depiction markup.
-    pub message: String,
+    pub message_depiction_markup: String,
 
     /// Call.
     pub call: Call,
@@ -24,13 +26,33 @@ pub struct DispatchError {
 
 impl DispatchError {
     /// Constructor.
-    pub fn new(message: String, call: Call, call_site: dispatch::CallSite) -> Self {
-        Self { message, call, call_site }
+    pub fn new(message_depiction_markup: String, call: Call, call_site: dispatch::CallSite) -> Self {
+        Self { message_depiction_markup, call, call_site }
+    }
+
+    /// Constructor.
+    #[track_caller]
+    pub fn as_problem(message_depiction_markup: String, call: Call, call_site: dispatch::CallSite) -> Problem {
+        Self::new(message_depiction_markup, call, call_site)
+            .into_problem()
+            .with(ErrorEquality::new::<Self>())
+            .with(ErrorDepiction::new::<Self>())
+            .with(ErrorMarkupDepicter::new::<Self>())
     }
 
     /// ID.
-    pub fn id(&self) -> ID {
-        self.call_site.id.clone().into()
+    pub fn id(&self) -> Result<ID, MalformedError> {
+        self.call_site.id.clone().try_into()
+    }
+}
+
+impl ToDepictionMarkup for DispatchError {
+    fn to_depiction_markup(&self) -> String {
+        format!("{} during {}", self.message_depiction_markup, self.call.to_depiction_markup())
+    }
+
+    fn into_depiction_markup(self) -> String {
+        self.to_depiction_markup()
     }
 }
 
@@ -41,25 +63,34 @@ impl Depict for DispatchError {
     {
         context.separate(writer)?;
 
+        let id: ID = self.call_site.id.clone().try_into().map_err(io::Error::other)?;
+        id.kind.depict(writer, context)?;
+        context.child().with_separator(true).separate(writer)?;
+        id.depict(writer, context)?;
+
         if let Some(property) = &self.call_site.property {
+            context.indent(writer)?;
             context.theme.write_meta(writer, property)?;
-        } else {
-            context.theme.write_meta(writer, "no property")?;
         }
 
         context.indent_into_branch(writer, true)?;
-        context.theme.write_depiction_markup(writer, &self.message)?;
+        context.theme.write_depiction_markup(writer, &self.message_depiction_markup)?;
 
-        context.child().increase_indentation().indent(writer)?;
+        let child_context = context.child().increase_indentation();
+        child_context.indent(writer)?;
         write!(writer, "during ")?;
         self.call.depict(writer, context)
     }
 }
 
 impl fmt::Display for DispatchError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{} during {} at {}", escape_depiction_markup(&self.message), self.call, &self.call_site)
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            formatter,
+            "{} during {} at {}",
+            escape_depiction_markup(&self.message_depiction_markup),
+            self.call,
+            &self.call_site
+        )
     }
 }
-
-impl Error for DispatchError {}

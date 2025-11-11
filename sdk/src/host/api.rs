@@ -22,3 +22,8 @@ pub fn evaluate_expression(
 pub fn get_entity(id: &dispatch_bindings::Id) -> Result<floria_bindings::Entity, DispatchError> {
     floria_bindings::get_entity(&id.clone().into())
 }
+
+/// Add entity.
+pub fn add_entity(entity: floria_bindings::Entity) -> Result<(), DispatchError> {
+    floria_bindings::add_entity(entity)
+}

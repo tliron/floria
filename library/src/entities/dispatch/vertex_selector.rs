@@ -1,25 +1,26 @@
 use super::super::{
-    super::{data::*, errors::*, plugins::*, store::*},
+    super::{data::*, plugins::*, store::*},
     vertex_selector::*,
 };
 
-use kutil::std::error::*;
+use problemo::*;
+
 impl VertexSelector {
     /// Select.
-    pub fn select<StoreT, ErrorReceiverT>(
+    pub fn select<StoreT, ProblemReceiverT>(
         &self,
         source_vertex_id: &ID,
         edge_template_id: &ID,
-        library: &mut Library<StoreT>,
-        errors: &mut ErrorReceiverT,
-    ) -> Result<Option<ID>, FloriaError>
+        context: &mut PluginContext<StoreT>,
+        problems: &mut ProblemReceiverT,
+    ) -> Result<Option<ID>, Problem>
     where
         StoreT: Clone + Send + Store,
-        ErrorReceiverT: ErrorReceiver<FloriaError>,
+        ProblemReceiverT: ProblemReceiver,
     {
         match self {
             Self::VertexID(id) => Ok(Some(id.clone())),
-            Self::Finder(vertex_finder) => vertex_finder.find(source_vertex_id, edge_template_id, library, errors),
+            Self::Finder(vertex_finder) => vertex_finder.find(source_vertex_id, edge_template_id, context, problems),
         }
     }
 }

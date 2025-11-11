@@ -1,5 +1,7 @@
+mod clone;
 mod conversions;
-mod delegated;
+mod equal;
+mod expression;
 
 #[allow(unused_imports)]
-pub use conversions::*;
+pub use {clone::*, conversions::*, equal::*, expression::*};

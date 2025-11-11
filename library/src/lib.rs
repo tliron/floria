@@ -29,7 +29,6 @@ For documentation and usage examples see the
 
 mod data;
 mod entities;
-mod errors;
 mod store;
 
 /// Plugins.
@@ -37,4 +36,4 @@ mod store;
 pub mod plugins;
 
 #[allow(unused_imports)]
-pub use {data::*, entities::*, errors::*, store::*};
+pub use {data::*, entities::*, store::*};
